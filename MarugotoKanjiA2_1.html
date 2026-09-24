@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢字の冒険 · Kanji Marugoto A2-1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+
+/* ======================================================================
+   PALETA DE COLORES — cámbiala aquí para retocar todo el diseño del juego
+   ====================================================================== */
+:root{
+  --color-bone:        #f1ead9;   /* blanco hueso — fondo principal        */
+  --color-bone-soft:   #e8dfc9;   /* hueso un poco más oscuro — paneles    */
+  --color-paper:       #faf6ec;   /* casi blanco — tarjetas / texto claro  */
+  --color-red:          #b23a2f;  /* rojo sello (hanko)                    */
+  --color-red-dark:     #8c2b22;  /* rojo oscuro — hover / bordes          */
+  --color-green:        #3c4a37;  /* verde oscuro apagado — acento         */
+  --color-green-soft:   #59695a;  /* verde apagado más claro — secundario  */
+  --color-ink:          #2a2620;  /* casi negro — texto principal          */
+  --color-ink-soft:     #6a6153;  /* texto secundario                      */
+  --color-correct:      #4b6b45;  /* feedback correcto                     */
+  --color-wrong:        #a8352b;  /* feedback incorrecto                   */
+  --radius-s: 10px;
+  --radius-m: 16px;
+  --radius-l: 26px;
+  /* Una sola familia tipográfica para japonés y latín, como se pidió */
+  --font-display: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+  --font-body:    'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:
+    radial-gradient(circle at 12% 8%, rgba(178,58,47,.06), transparent 40%),
+    radial-gradient(circle at 92% 85%, rgba(60,74,55,.08), transparent 45%),
+    var(--color-bone);
+  color:var(--color-ink);
+  font-family:var(--font-body);
+  min-height:100vh;
+  padding:20px 14px 60px;
+}
+
+.wrap{ max-width:1120px; margin:0 auto; }
+
+/* ---------- Encabezado + marcador (sello hanko) ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:14px; margin-bottom:22px; flex-wrap:wrap;
+}
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand h1{
+  font-family:var(--font-display); font-weight:900; letter-spacing:.01em;
+  font-size:1.5rem; margin:0; color:var(--color-ink);
+}
+.brand small{ display:block; color:var(--color-ink-soft); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; font-weight:500; }
+
+.scoreboard{
+  display:flex; align-items:center; gap:10px;
+  background:var(--color-paper); border:1px solid var(--color-bone-soft);
+  border-radius:999px; padding:6px 10px 6px 6px; box-shadow:0 2px 0 rgba(42,38,32,.06);
+}
+.hanko{
+  width:44px; height:44px; border-radius:10px; background:var(--color-red);
+  color:var(--color-paper); display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:800; font-size:.95rem; flex-shrink:0;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.25);
+  transform:rotate(-3deg);
+}
+.score-item{ text-align:left; padding:0 8px; line-height:1.1; }
+.score-item .num{ font-weight:700; font-size:1rem; color:var(--color-ink); }
+.score-item .lbl{ font-size:.62rem; color:var(--color-ink-soft); text-transform:uppercase; letter-spacing:.05em; font-weight:500; }
+.score-divider{ width:1px; height:26px; background:var(--color-bone-soft); }
+.reset-btn{
+  border:none; background:var(--color-bone-soft); color:var(--color-ink);
+  width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1rem;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:transform .2s ease, background .2s ease;
+}
+.reset-btn:hover{ background:var(--color-red); color:var(--color-paper); transform:rotate(-45deg); }
+
+/* ---------- Tarjetas / paneles generales ---------- */
+.panel{
+  background:var(--color-paper); border-radius:var(--radius-l);
+  padding:26px 32px; box-shadow:0 10px 24px -14px rgba(42,38,32,.35);
+  border:1px solid var(--color-bone-soft);
+}
+.section-title{
+  font-family:var(--font-display); font-weight:700; font-size:1.1rem;
+  color:var(--color-green); margin:0 0 4px;
+}
+.section-sub{ color:var(--color-ink-soft); font-size:.85rem; margin:0 0 16px; }
+
+/* ---------- Selector de modo ---------- */
+.mode-tabs{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.mode-tab{
+  flex:1; min-width:140px; border:none; cursor:pointer; padding:14px 10px; border-radius:var(--radius-m);
+  background:var(--color-bone-soft); color:var(--color-ink-soft);
+  font-family:var(--font-body); font-weight:700; font-size:.86rem;
+  transition:transform .15s ease, background .2s ease, color .2s ease;
+}
+.mode-tab.active{ background:var(--color-green); color:var(--color-paper); }
+.mode-tab:hover{ transform:translateY(-1px); }
+
+/* ---------- Grid de lecciones ---------- */
+.lesson-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr));
+  gap:12px; margin-bottom:6px;
+}
+.lesson-card{
+  border:1px solid var(--color-bone-soft); background:var(--color-bone);
+  border-radius:var(--radius-m); padding:14px; cursor:pointer; text-align:left;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.lesson-card:hover{ transform:translateY(-2px); box-shadow:0 8px 18px -12px rgba(42,38,32,.4); border-color:var(--color-green-soft); }
+.lesson-card .num{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:24px; height:24px; border-radius:50%; background:var(--color-red);
+  color:var(--color-paper); font-size:.72rem; font-weight:700; margin-bottom:6px;
+}
+.lesson-card .topic{ font-family:var(--font-display); font-weight:700; font-size:1rem; display:block; white-space:normal; line-height:1.3; }
+.lesson-card .topic-es{ font-size:.74rem; color:var(--color-ink-soft); display:block; margin-top:3px; line-height:1.35; font-weight:500; }
+.lesson-card .progress{ margin-top:9px; height:5px; border-radius:4px; background:var(--color-bone-soft); overflow:hidden; }
+.lesson-card .progress-fill{ height:100%; background:var(--color-green); width:0%; transition:width .3s ease; }
+
+/* ---------- Botón volver ---------- */
+.back-btn{
+  border:none; background:none; color:var(--color-ink-soft); cursor:pointer;
+  font-family:var(--font-body); font-weight:500; font-size:.85rem; margin-bottom:12px; padding:4px 0;
+  display:flex; align-items:center; gap:6px;
+}
+.back-btn:hover{ color:var(--color-red); }
+
+/* ======================= JUEGO 1 — TARJETAS ======================= */
+.flash-stage{ display:flex; flex-direction:column; align-items:center; gap:20px; }
+.flash-progress{ width:100%; max-width:340px; height:6px; background:var(--color-bone-soft); border-radius:4px; overflow:hidden; }
+.flash-progress-fill{ height:100%; background:var(--color-green); transition:width .3s ease; }
+
+.card-3d{ perspective:1200px; width:280px; height:340px; }
+.card-inner{
+  position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.2,.2,1);
+  transform-style:preserve-3d; cursor:pointer;
+}
+.card-inner.flipped{ transform:rotateY(180deg); }
+.card-face{
+  position:absolute; inset:0; backface-visibility:hidden; border-radius:var(--radius-l);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:20px; text-align:center;
+  box-shadow:0 14px 30px -16px rgba(42,38,32,.45);
+  border:1px solid var(--color-bone-soft);
+}
+.card-front{ background:var(--color-paper); }
+.card-back{ background:var(--color-green); color:var(--color-paper); transform:rotateY(180deg); }
+.card-emoji{ font-size:3.6rem; margin-bottom:10px; }
+.card-kanji{ font-family:var(--font-display); font-size:2.9rem; font-weight:800; color:var(--color-ink); }
+.card-hint{ margin-top:10px; font-size:.72rem; color:var(--color-ink-soft); letter-spacing:.04em; font-weight:500; }
+.card-back .hira{ font-size:1.3rem; margin-bottom:6px; font-weight:700; }
+.card-back .roma{ font-size:.85rem; opacity:.85; margin-bottom:14px; }
+.card-back .es{ font-family:var(--font-display); font-size:1.4rem; font-weight:800; }
+
+.flash-actions{ display:flex; gap:12px; width:100%; max-width:340px; }
+.flash-btn{
+  flex:1; padding:14px 8px; border-radius:var(--radius-m); border:none; cursor:pointer;
+  font-family:var(--font-body); font-weight:700; font-size:.88rem; transition:transform .12s ease, filter .15s ease;
+}
+.flash-btn:active{ transform:scale(.96); }
+.flash-btn.no{ background:var(--color-bone-soft); color:var(--color-ink); }
+.flash-btn.yes{ background:var(--color-green); color:var(--color-paper); }
+.flash-btn:disabled{ opacity:.45; cursor:default; }
+.flash-btn:hover:not(:disabled){ filter:brightness(1.05); }
+
+/* ======================= JUEGO 2 — LECTURA ======================= */
+.reading-text{
+  font-family:var(--font-display); font-weight:500; font-size:1.18rem; line-height:2.6;
+  background:var(--color-bone); border-radius:var(--radius-m); padding:20px 22px;
+  border:1px solid var(--color-bone-soft); margin-bottom:20px;
+}
+.reading-text ruby rt{ font-size:.55em; color:var(--color-ink-soft); font-weight:600; user-select:none; }
+.hira-slot{
+  display:inline-block; cursor:pointer; padding:2px 6px; margin:0 1px; border-radius:8px;
+  border-bottom:2px dashed var(--color-green-soft); transition:background .15s ease, transform .15s ease;
+}
+.hira-slot:hover{ background:rgba(60,74,55,.08); }
+.hira-slot.selected{ background:var(--color-green); color:var(--color-paper); border-color:transparent; }
+.hira-slot.solved{ border-bottom:2px solid var(--color-correct); color:var(--color-correct); font-weight:700; cursor:default; background:rgba(75,107,69,.08); }
+.hira-slot.solved rt{ color:var(--color-correct); }
+.hira-slot.shake{ animation:shakeX .4s ease; }
+
+.tile-bank{ display:flex; flex-wrap:wrap; gap:10px; }
+.kanji-tile{
+  font-family:var(--font-display); font-size:1.4rem; font-weight:700;
+  background:var(--color-paper); border:1px solid var(--color-bone-soft);
+  border-radius:var(--radius-s); padding:10px 16px; cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease, opacity .3s ease;
+}
+.kanji-tile:hover{ transform:translateY(-2px); box-shadow:0 8px 16px -10px rgba(42,38,32,.4); }
+.kanji-tile.solved{ opacity:0; pointer-events:none; transform:scale(.5); }
+.kanji-tile.shake{ animation:shakeX .4s ease; border-color:var(--color-wrong); }
+
+@keyframes shakeX{
+  0%,100%{ transform:translateX(0); }
+  20%{ transform:translateX(-6px); }
+  40%{ transform:translateX(6px); }
+  60%{ transform:translateX(-4px); }
+  80%{ transform:translateX(4px); }
+}
+
+.hint-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:var(--color-ink); color:var(--color-paper); padding:10px 18px; border-radius:999px;
+  font-size:.82rem; font-weight:500; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  z-index:50;
+}
+.hint-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* Partículas flotantes al acertar */
+.float-particle{
+  position:fixed; pointer-events:none; font-size:1.3rem; z-index:60; font-weight:700;
+  animation:floatUp 1s ease-out forwards;
+}
+@keyframes floatUp{
+  0%{ opacity:1; transform:translateY(0) scale(1); }
+  100%{ opacity:0; transform:translateY(-70px) scale(1.3); }
+}
+
+/* ======================= JUEGO 3 — RULETA ======================= */
+.wheel-layout{ display:flex; gap:30px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+.wheel-col{ display:flex; flex-direction:column; align-items:center; gap:18px; }
+.wheel-outer{ position:relative; width:420px; height:420px; max-width:88vw; max-height:88vw; }
+.wheel-pointer{
+  position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+  width:0; height:0; border-left:17px solid transparent; border-right:17px solid transparent;
+  border-top:28px solid var(--color-red); z-index:5;
+  filter:drop-shadow(0 2px 2px rgba(42,38,32,.3));
+}
+.wheel-circle{
+  width:100%; height:100%; border-radius:50%; position:relative;
+  border:7px solid var(--color-paper);
+  box-shadow:0 14px 34px -12px rgba(42,38,32,.5), inset 0 0 0 2px var(--color-bone-soft);
+  transform:rotate(0deg);
+}
+.wheel-hub{
+  position:absolute; top:50%; left:50%; width:60px; height:60px; border-radius:50%;
+  background:var(--color-red); transform:translate(-50%,-50%); z-index:4;
+  display:flex; align-items:center; justify-content:center; color:var(--color-paper);
+  font-family:var(--font-display); font-weight:800; font-size:.9rem;
+  box-shadow:0 0 0 5px var(--color-paper);
+}
+.wheel-label{
+  position:absolute; top:50%; left:50%; transform-origin:0 0;
+  font-family:var(--font-display); font-weight:700; font-size:1.05rem; color:var(--color-ink);
+  white-space:nowrap; pointer-events:none;
+}
+.wheel-result-panel{
+  width:280px; max-width:88vw; min-height:420px; background:var(--color-bone);
+  border:1px solid var(--color-bone-soft); border-radius:var(--radius-l); padding:24px;
+  text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+}
+.wheel-result-emoji{ font-size:3rem; }
+.wheel-result-kanji{ font-family:var(--font-display); font-size:2.8rem; font-weight:800; }
+.wheel-input{
+  width:100%; padding:12px; border-radius:var(--radius-m); border:1px solid var(--color-bone-soft);
+  font-family:var(--font-body); font-size:1rem; text-align:center; background:var(--color-paper); color:var(--color-ink);
+}
+.wheel-input:focus{ outline:2px solid var(--color-green-soft); }
+.wheel-input.shake{ animation:shakeX .4s ease; border-color:var(--color-wrong); }
+.wheel-feedback{ font-weight:700; min-height:2.6em; font-size:.85rem; line-height:1.4; }
+.wheel-feedback.correct{ color:var(--color-correct); }
+.wheel-feedback.wrong{ color:var(--color-wrong); }
+.wheel-placeholder{ color:var(--color-ink-soft); font-size:.9rem; }
+.wheel-hint{ font-size:.76rem; color:var(--color-ink-soft); }
+
+/* ======================= JUEGO 4 — CONSTELACIONES ======================= */
+.constellation-layout{ display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start; justify-content:center; }
+.constellation-board-wrap{ flex:2; min-width:300px; }
+.constellation-board{
+  position:relative; width:100%; height:400px; border-radius:var(--radius-l);
+  background-color:var(--color-paper);
+  background-image: radial-gradient(var(--color-bone-soft) 1.6px, transparent 1.6px);
+  background-size:24px 24px;
+  border:1px solid var(--color-bone-soft); overflow:hidden;
+  box-shadow:inset 0 2px 10px rgba(42,38,32,.05);
+}
+.constellation-svg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.const-line{ stroke:var(--color-red); stroke-width:2; stroke-dasharray:5 5; opacity:.75; }
+.radical-tile{
+  position:absolute; width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%;
+  background:var(--color-paper); border:2px solid var(--color-green-soft);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--color-ink);
+  cursor:pointer; box-shadow:0 8px 16px -10px rgba(42,38,32,.4);
+  transition:transform .15s ease, background .2s ease, border-color .2s ease, opacity .3s ease;
+}
+.radical-tile:hover{ transform:scale(1.08); }
+.radical-tile.selected{ background:var(--color-green); border-color:var(--color-green); color:var(--color-paper); }
+.radical-tile.solved{ background:var(--color-red); border-color:var(--color-red); color:var(--color-paper); }
+.radical-tile.shake{ animation:shakeX .4s ease; border-color:var(--color-wrong); }
+.constellation-info-panel{
+  flex:1; min-width:230px; min-height:400px; background:var(--color-bone); border:1px solid var(--color-bone-soft);
+  border-radius:var(--radius-l); padding:22px; text-align:center; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px;
+}
+.constellation-info-char{ font-family:var(--font-display); font-size:2.6rem; font-weight:800; }
+.constellation-info-reading{ font-size:.85rem; color:var(--color-ink-soft); }
+.constellation-info-meaning{ font-size:.92rem; color:var(--color-ink); font-weight:600; line-height:1.5; }
+.constellation-info-placeholder{ color:var(--color-ink-soft); font-size:.88rem; line-height:1.6; }
+.constellation-progress-label{ text-align:center; color:var(--color-ink-soft); font-size:.8rem; font-weight:500; margin-bottom:10px; }
+
+/* ---------- Pantalla de finalización ---------- */
+.done-screen{ text-align:center; padding:26px 10px; }
+.done-screen .emoji{ font-size:3rem; margin-bottom:10px; }
+.done-screen h2{ font-family:var(--font-display); font-weight:800; color:var(--color-green); margin:0 0 6px; }
+.done-screen p{ color:var(--color-ink-soft); margin:0 0 20px; }
+.done-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.pill-btn{
+  border:none; cursor:pointer; padding:12px 20px; border-radius:999px; font-weight:700;
+  font-family:var(--font-body); font-size:.85rem; transition:transform .15s ease, filter .15s ease;
+}
+.pill-btn:hover{ transform:translateY(-2px); filter:brightness(1.05); }
+.pill-btn:disabled{ opacity:.5; cursor:default; transform:none; }
+.pill-btn.primary{ background:var(--color-red); color:var(--color-paper); }
+.pill-btn.secondary{ background:var(--color-bone-soft); color:var(--color-ink); }
+
+footer.note{ text-align:center; color:var(--color-ink-soft); font-size:.72rem; margin-top:26px; line-height:1.6; font-weight:500; }
+
+@media (max-width:480px){
+  .card-3d{ width:230px; height:300px; }
+  .brand h1{ font-size:1.2rem; }
+  .panel{ padding:20px 16px; }
+  .wheel-outer{ width:320px; height:320px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <h1>漢字の冒険</h1>
+      <small>Marugoto A2-1 · りかい · Lecciones 1–18</small>
+    </div>
+    <div class="scoreboard">
+      <div class="hanko">得点</div>
+      <div class="score-item"><div class="num" id="sc-points">0</div><div class="lbl">Puntos</div></div>
+      <div class="score-divider"></div>
+      <div class="score-item"><div class="num" id="sc-streak">0</div><div class="lbl">Racha</div></div>
+      <div class="score-divider"></div>
+      <div class="score-item"><div class="num" id="sc-accuracy">—</div><div class="lbl">Precisión</div></div>
+      <button class="reset-btn" onclick="resetScore()" title="Reiniciar puntuación">↺</button>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA: MENÚ ===================== -->
+  <div id="screen-menu" class="panel">
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="flash" onclick="setMode('flash')">🎴 Tarjetas</button>
+      <button class="mode-tab" data-mode="read" onclick="setMode('read')">📖 Lectura</button>
+      <button class="mode-tab" data-mode="wheel" onclick="setMode('wheel')">🎡 Ruleta</button>
+      <button class="mode-tab" data-mode="constellation" onclick="setMode('constellation')">🌌 Constelaciones</button>
+    </div>
+    <p class="section-title" id="menu-title">Elige una lección</p>
+    <p class="section-sub" id="menu-sub">Practica los kanji con tarjetas de repetición espaciada.</p>
+    <div class="lesson-grid" id="lesson-grid"></div>
+  </div>
+
+  <!-- ===================== PANTALLA: JUEGO 1 ===================== -->
+  <div id="screen-flash" class="panel" style="display:none;">
+    <button class="back-btn" onclick="goToMenu()">← Volver al menú</button>
+    <p class="section-title" id="flash-title"></p>
+    <div class="flash-stage">
+      <div class="flash-progress"><div class="flash-progress-fill" id="flash-progress-fill"></div></div>
+      <div class="card-3d" id="card3d" onclick="flipCard()">
+        <div class="card-inner" id="cardInner">
+          <div class="card-face card-front">
+            <div class="card-emoji" id="card-emoji"></div>
+            <div class="card-kanji" id="card-kanji"></div>
+            <div class="card-hint">toca la tarjeta para ver la respuesta</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="hira" id="card-hira"></div>
+            <div class="roma" id="card-roma"></div>
+            <div class="es" id="card-es"></div>
+          </div>
+        </div>
+      </div>
+      <div class="flash-actions">
+        <button class="flash-btn no" id="btn-no" disabled onclick="answerCard(false)">😵 No me acuerdo</button>
+        <button class="flash-btn yes" id="btn-yes" disabled onclick="answerCard(true)">✅ Lo sabía</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA: JUEGO 2 ===================== -->
+  <div id="screen-read" class="panel" style="display:none;">
+    <button class="back-btn" onclick="goToMenu()">← Volver al menú</button>
+    <p class="section-title" id="read-title"></p>
+    <p class="section-sub">Toca una palabra subrayada del texto y luego el kanji que le corresponde.</p>
+    <div class="reading-text" id="reading-text"></div>
+    <div class="tile-bank" id="tile-bank"></div>
+  </div>
+
+  <!-- ===================== PANTALLA: JUEGO 3 ===================== -->
+  <div id="screen-wheel" class="panel" style="display:none;">
+    <button class="back-btn" onclick="goToMenu()">← Volver al menú</button>
+    <p class="section-title" id="wheel-title"></p>
+    <p class="section-sub">Gira la ruleta y escribe la pronunciación del kanji que salga.</p>
+    <div class="wheel-layout">
+      <div class="wheel-col">
+        <div class="wheel-outer">
+          <div class="wheel-pointer"></div>
+          <div class="wheel-circle" id="wheel-circle"></div>
+          <div class="wheel-hub">漢字</div>
+        </div>
+        <button class="pill-btn primary" id="wheel-spin-btn" onclick="spinWheel()">🎡 Girar la ruleta</button>
+      </div>
+      <div class="wheel-result-panel">
+        <div class="wheel-placeholder" id="wheel-placeholder">Gira la ruleta para ver tu primer kanji.</div>
+        <div id="wheel-answer-area" style="display:none; flex-direction:column; align-items:center; gap:10px; width:100%;">
+          <div class="wheel-result-emoji" id="wheel-result-emoji">🎡</div>
+          <div class="wheel-result-kanji" id="wheel-result-kanji"></div>
+          <div class="wheel-hint">Escribe su pronunciación en hiragana o rōmaji</div>
+          <input type="text" class="wheel-input" id="wheel-input" placeholder="ej. はは / haha" autocomplete="off" onkeydown="if(event.key==='Enter'){ checkWheelAnswer(); }">
+          <button class="pill-btn primary" id="wheel-check-btn" onclick="checkWheelAnswer()">Comprobar</button>
+          <button class="pill-btn secondary" id="wheel-next-btn" style="display:none;" onclick="prepareNextSpin()">Girar de nuevo</button>
+          <div class="wheel-feedback" id="wheel-feedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA: JUEGO 4 ===================== -->
+  <div id="screen-constellation" class="panel" style="display:none;">
+    <button class="back-btn" onclick="goToMenu()">← Volver al menú</button>
+    <p class="section-title" id="constellation-title"></p>
+    <p class="section-sub">Toca dos radicales para unirlos y formar un kanji de la lección. Toca cualquier radical para leer su origen — sin cronómetro, es solo curiosidad.</p>
+    <p class="constellation-progress-label" id="constellation-progress-label"></p>
+    <div class="constellation-layout">
+      <div class="constellation-board-wrap">
+        <div class="constellation-board" id="constellation-board">
+          <svg class="constellation-svg" id="constellation-svg"></svg>
+        </div>
+      </div>
+      <div class="constellation-info-panel" id="constellation-info-panel">
+        <div class="constellation-info-placeholder">Toca un radical del tablero para descubrir su historia.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA: FINAL ===================== -->
+  <div id="screen-done" class="panel" style="display:none;">
+    <div class="done-screen">
+      <div class="emoji">🏮</div>
+      <h2 id="done-heading">¡Lección completada!</h2>
+      <p id="done-text"></p>
+      <div class="done-actions">
+        <button class="pill-btn secondary" onclick="goToMenu()">Volver al menú</button>
+        <button class="pill-btn primary" id="done-retry">Repetir lección</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="note">
+    まるごと 初級1 A2 りかい — juego de estudio no oficial hecho para practicar los kanji del libro.<br>
+    Diseñado por: Luis Alejandro Cuevas 2026.
+  </footer>
+</div>
+
+<div class="hint-toast" id="hint-toast"></div>
+
+<script>
+/* ======================================================================
+   DATOS DE KANJI — edita/corrige aquí las palabras de cada lección.
+   Cada lección corresponde a una "sección" del libro (Lección 1 a 18).
+   reading: frase de lectura con dos tipos de marcadores:
+     [[i]]     → palabra interactiva a relacionar (words[i]); empieza en
+                 hiragana y se convierte en kanji+furigana al acertar.
+     {{k|h}}   → palabra decorativa ya mostrada en kanji+furigana desde
+                 el principio (no es parte del ejercicio de relación).
+   ====================================================================== */
+const LEVELS = [
+  { id:1, topic:"わたしと かぞく 1", topicEs:"Mi familia y yo · Lección 1", emoji:"👪",
+    words:[
+      {kanji:"私",     hira:"わたし",   roma:"watashi", es:"yo", emoji:"🙋"},
+      {kanji:"父",     hira:"ちち",     roma:"chichi",  es:"padre", emoji:"👨"},
+      {kanji:"母",     hira:"はは",     roma:"haha",    es:"madre", emoji:"👩"},
+      {kanji:"子ども", hira:"こども",   roma:"kodomo",  es:"niño / niña", emoji:"🧒"},
+      {kanji:"男",     hira:"おとこ",   roma:"otoko",   es:"hombre", emoji:"👨"},
+      {kanji:"女",     hira:"おんな",   roma:"onna",    es:"mujer", emoji:"👩"},
+      {kanji:"人",     hira:"ひと",     roma:"hito",    es:"persona", emoji:"🧑"},
+      {kanji:"お父さん",hira:"おとうさん",roma:"otousan",es:"papá", emoji:"👨‍👧"},
+      {kanji:"お母さん",hira:"おかあさん",roma:"okaasan",es:"mamá", emoji:"👩‍👧"},
+      {kanji:"何人",   hira:"なんにん", roma:"nannin",  es:"cuántas personas", emoji:"🔢"}
+    ],
+    reading:"[[0]]の {{家族|かぞく}}を {{紹介|しょうかい}}します。私の [[1]]と [[2]]は やさしい [[6]]です。となりの {{家|いえ}}には [[7]]と [[8]]と [[3]]が {{住|す}}んでいます。その {{家|いえ}}には [[4]]の {{子|こ}}と [[5]]の {{子|こ}}が います。{{皆|みんな}}で [[9]]ですか。"
+  },
+  { id:2, topic:"わたしと かぞく 2", topicEs:"Mi familia y yo · Lección 2", emoji:"🌍",
+    words:[
+      {kanji:"国",     hira:"くに",     roma:"kuni",    es:"país", emoji:"🌍"},
+      {kanji:"外国",   hira:"がいこく", roma:"gaikoku", es:"país extranjero", emoji:"✈️"},
+      {kanji:"語",     hira:"ご",       roma:"go",      es:"idioma (sufijo, ej. 日本語)", emoji:"🗣️"},
+      {kanji:"〜人",   hira:"じん",     roma:"jin",     es:"nacionalidad (sufijo, ej. 日本人)", emoji:"🌐"},
+      {kanji:"好き",   hira:"すき",     roma:"suki",    es:"gustar", emoji:"❤️"},
+      {kanji:"本",     hira:"ほん",     roma:"hon",     es:"libro", emoji:"📖"},
+      {kanji:"読書",   hira:"どくしょ", roma:"dokusho", es:"lectura", emoji:"📚"},
+      {kanji:"何",     hira:"なに",     roma:"nani",    es:"qué", emoji:"❓"}
+    ],
+    reading:"{{私|わたし}}の [[0]]は {{日本|にほん}}です。[[1]]の {{言葉|ことば}}に {{興味|きょうみ}}が あります。{{日本|にほん}}[[2]]を {{勉強|べんきょう}}しています。{{私|わたし}}は {{日本|にほん}}[[3]]です。[[6]]が [[4]]で、{{毎日|まいにち}} [[5]]を {{読|よ}}みます。あなたは {{読書|どくしょ}}が {{好|す}}きですか、[[7]]が {{好|す}}きですか。"
+  },
+  { id:3, topic:"きせつと てんき 1", topicEs:"Estaciones y clima · Lección 3", emoji:"🌸",
+    words:[
+      {kanji:"春", hira:"はる", roma:"haru", es:"primavera", emoji:"🌸"},
+      {kanji:"夏", hira:"なつ", roma:"natsu",es:"verano", emoji:"🏖️"},
+      {kanji:"秋", hira:"あき", roma:"aki",  es:"otoño", emoji:"🍁"},
+      {kanji:"冬", hira:"ふゆ", roma:"fuyu", es:"invierno", emoji:"⛄"},
+      {kanji:"今", hira:"いま", roma:"ima",  es:"ahora", emoji:"⏱️"},
+      {kanji:"花", hira:"はな", roma:"hana", es:"flor", emoji:"🌼"},
+      {kanji:"海", hira:"うみ", roma:"umi",  es:"mar", emoji:"🌊"},
+      {kanji:"山", hira:"やま", roma:"yama", es:"montaña", emoji:"⛰️"},
+      {kanji:"川", hira:"かわ", roma:"kawa", es:"río", emoji:"🏞️"}
+    ],
+    reading:"{{日本|にほん}}には [[0]]と [[1]]と [[2]]と [[3]]、よっつの {{季節|きせつ}}が あります。[[4]]は {{夏|なつ}}です。{{夏|なつ}}は [[6]]で {{泳|およ}}ぎます。{{秋|あき}}は [[7]]で ハイキングを して、きれいな [[5]]を {{見|み}}ます。{{冬|ふゆ}}は [[8]]の {{水|みず}}が つめたいです。"
+  },
+  { id:4, topic:"きせつと てんき 2", topicEs:"Estaciones y clima · Lección 4", emoji:"☀️",
+    words:[
+      {kanji:"今日", hira:"きょう", roma:"kyou", es:"hoy", emoji:"📆"},
+      {kanji:"天気", hira:"てんき", roma:"tenki",es:"clima", emoji:"☀️"},
+      {kanji:"晴れ", hira:"はれ",   roma:"hare", es:"despejado", emoji:"🌞"},
+      {kanji:"雨",   hira:"あめ",   roma:"ame",  es:"lluvia", emoji:"🌧️"},
+      {kanji:"雪",   hira:"ゆき",   roma:"yuki", es:"nieve", emoji:"❄️"},
+      {kanji:"雲",   hira:"くも",   roma:"kumo", es:"nube", emoji:"☁️"},
+      {kanji:"風",   hira:"かぜ",   roma:"kaze", es:"viento", emoji:"🌬️"},
+      {kanji:"空",   hira:"そら",   roma:"sora", es:"cielo", emoji:"🌌"}
+    ],
+    reading:"[[0]]の [[1]]は どうですか。{{朝|あさ}}は [[2]]でしたが、[[7]]に [[5]]が {{出|で}}てきました。{{昼|ひる}}から [[3]]が {{降|ふ}}って、つよい [[6]]も ふきました。{{冬|ふゆ}}に なると [[4]]が {{降|ふ}}る {{日|ひ}}も あります。"
+  },
+  { id:5, topic:"わたしの まち 1", topicEs:"Mi ciudad · Lección 5", emoji:"🏙️",
+    words:[
+      {kanji:"町",   hira:"まち",   roma:"machi", es:"ciudad / pueblo", emoji:"🏙️"},
+      {kanji:"店",   hira:"みせ",   roma:"mise",  es:"tienda", emoji:"🏪"},
+      {kanji:"人気", hira:"にんき", roma:"ninki", es:"popularidad", emoji:"⭐"},
+      {kanji:"多い", hira:"おおい", roma:"ooi",   es:"mucho / numeroso", emoji:"📈"},
+      {kanji:"少ない",hira:"すくない",roma:"sukunai",es:"poco", emoji:"📉"},
+      {kanji:"高い", hira:"たかい", roma:"takai", es:"alto / caro", emoji:"🗼"},
+      {kanji:"安い", hira:"やすい", roma:"yasui", es:"barato", emoji:"💰"},
+      {kanji:"広い", hira:"ひろい", roma:"hiroi", es:"amplio / espacioso", emoji:"🌐"}
+    ],
+    reading:"この [[0]]には [[1]]が たくさん あります。とても [[2]]な {{場所|ばしょ}}です。{{人|ひと}}が [[3]]ですが、{{車|くるま}}は [[4]]です。ねだんが [[5]]い {{店|みせ}}も [[6]]い {{店|みせ}}も あります。{{道路|どうろ}}は [[7]]いです。"
+  },
+  { id:6, topic:"わたしの まち 2", topicEs:"Mi ciudad · Lección 6", emoji:"🚦",
+    words:[
+      {kanji:"道",   hira:"みち",   roma:"michi",   es:"camino / calle", emoji:"🛣️"},
+      {kanji:"通り", hira:"とおり", roma:"toori",   es:"avenida / calle", emoji:"🚗"},
+      {kanji:"右",   hira:"みぎ",   roma:"migi",    es:"derecha", emoji:"➡️"},
+      {kanji:"左",   hira:"ひだり", roma:"hidari",  es:"izquierda", emoji:"⬅️"},
+      {kanji:"一つ", hira:"ひとつ", roma:"hitotsu", es:"uno (objeto)", emoji:"1️⃣"},
+      {kanji:"二つ", hira:"ふたつ", roma:"futatsu", es:"dos (objetos)", emoji:"2️⃣"},
+      {kanji:"赤い", hira:"あかい", roma:"akai",    es:"rojo", emoji:"🔴"},
+      {kanji:"青い", hira:"あおい", roma:"aoi",     es:"azul", emoji:"🔵"},
+      {kanji:"黒い", hira:"くろい", roma:"kuroi",   es:"negro", emoji:"⚫"},
+      {kanji:"白い", hira:"しろい", roma:"shiroi",  es:"blanco", emoji:"⚪"}
+    ],
+    reading:"この [[0]]を まっすぐ いって、つぎの [[1]]で [[2]]に {{曲|ま}}がってください。それから [[3]]に {{曲|ま}}がると、[[9]]い {{建物|たてもの}}が {{見|み}}えます。その となりに [[6]]い {{花|はな}}と [[7]]い {{空|そら}}と [[8]]い ねこが います。りんごを [[4]]と みかんを [[5]]、{{買|か}}って ください。"
+  },
+  { id:7, topic:"でかける 1", topicEs:"Salir de casa · Lección 7", emoji:"🚉",
+    words:[
+      {kanji:"時間",     hira:"じかん",     roma:"jikan",     es:"tiempo / hora", emoji:"⏰"},
+      {kanji:"場所",     hira:"ばしょ",     roma:"basho",     es:"lugar", emoji:"📍"},
+      {kanji:"駅",       hira:"えき",       roma:"eki",       es:"estación", emoji:"🚉"},
+      {kanji:"日",       hira:"ひ",         roma:"hi",        es:"día", emoji:"☀️"},
+      {kanji:"出かける", hira:"でかける",   roma:"dekakeru",  es:"salir (de casa)", emoji:"🚪"},
+      {kanji:"待ちます", hira:"まちます",   roma:"machimasu", es:"esperar", emoji:"⏳"},
+      {kanji:"止まります",hira:"とまります",roma:"tomarimasu",es:"detenerse", emoji:"🛑"}
+    ],
+    reading:"{{明日|あした}}は {{大切|たいせつ}}な [[3]]です。{{朝|あさ}} はやく [[4]]よていです。{{待|ま}}ちあわせの [[1]]は [[2]]{{前|まえ}}です。[[0]]どおりに {{行|い}}かないと、{{友だち|ともだち}}が [[5]]。バスが [[6]]と、{{皆|みんな}} こまります。"
+  },
+  { id:8, topic:"でかける 2", topicEs:"Salir de casa · Lección 8", emoji:"🌙",
+    words:[
+      {kanji:"食事",   hira:"しょくじ", roma:"shokuji", es:"comida", emoji:"🍽️"},
+      {kanji:"仕事",   hira:"しごと",   roma:"shigoto", es:"trabajo", emoji:"💼"},
+      {kanji:"前",     hira:"まえ",     roma:"mae",     es:"antes / delante", emoji:"⬅️"},
+      {kanji:"後",     hira:"あと",     roma:"ato",     es:"después / detrás", emoji:"➡️"},
+      {kanji:"朝",     hira:"あさ",     roma:"asa",     es:"mañana", emoji:"🌅"},
+      {kanji:"昼",     hira:"ひる",     roma:"hiru",    es:"mediodía", emoji:"🌞"},
+      {kanji:"夜",     hira:"よる",     roma:"yoru",    es:"noche", emoji:"🌙"},
+      {kanji:"乗ります",hira:"のります",roma:"norimasu",es:"subirse (a un vehículo)", emoji:"🚉"}
+    ],
+    reading:"[[4]]は はやく {{起|お}}きて [[0]]を します。それから [[1]]に {{行|い}}きます。{{仕事|しごと}}の [[2]]に {{電車|でんしゃ}}に [[7]]。[[5]]に {{昼|ひる}}ごはんを {{食|た}}べます。{{仕事|しごと}}の [[3]]、[[6]]に {{家|いえ}}に {{帰|かえ}}ります。"
+  },
+  { id:9, topic:"がいこくと がいこくぶんか 1", topicEs:"Países y sus culturas · Lección 9", emoji:"🏫",
+    words:[
+      {kanji:"学校",   hira:"がっこう",     roma:"gakkou",       es:"escuela", emoji:"🏫"},
+      {kanji:"小学校", hira:"しょうがっこう",roma:"shougakkou",  es:"escuela primaria", emoji:"🎒"},
+      {kanji:"中学校", hira:"ちゅうがっこう",roma:"chuugakkou",  es:"secundaria", emoji:"📘"},
+      {kanji:"高校",   hira:"こうこう",     roma:"koukou",       es:"preparatoria / bachillerato", emoji:"🏫"},
+      {kanji:"大学",   hira:"だいがく",     roma:"daigaku",      es:"universidad", emoji:"🎓"},
+      {kanji:"先生",   hira:"せんせい",     roma:"sensei",       es:"profesor / profesora", emoji:"🧑‍🏫"},
+      {kanji:"学生",   hira:"がくせい",     roma:"gakusei",      es:"estudiante", emoji:"🧑‍🎓"},
+      {kanji:"〜年生", hira:"ねんせい",     roma:"nensei",       es:"(tal) año de estudios", emoji:"📚"},
+      {kanji:"勉強",   hira:"べんきょう",   roma:"benkyou",      es:"estudio", emoji:"✏️"}
+    ],
+    reading:"{{日本|にほん}}の きょういくは [[1]]、[[2]]、[[3]]、[[4]]の じゅんに すすみます。{{私|わたし}}の [[0]]には やさしい [[5]]が {{多|おお}}いです。{{私|わたし}}は {{大学|だいがく}}2 [[7]]の [[6]]です。{{毎日|まいにち}} [[8]]を がんばっています。"
+  },
+  { id:10, topic:"がいこくと がいこくぶんか 2", topicEs:"Países y sus culturas · Lección 10", emoji:"🎎",
+    words:[
+      {kanji:"文化",   hira:"ぶんか",   roma:"bunka",    es:"cultura", emoji:"🎎"},
+      {kanji:"音楽",   hira:"おんがく", roma:"ongaku",   es:"música", emoji:"🎵"},
+      {kanji:"旅行",   hira:"りょこう", roma:"ryokou",   es:"viaje", emoji:"✈️"},
+      {kanji:"留学",   hira:"りゅうがく",roma:"ryuugaku",es:"estudiar en el extranjero", emoji:"🌏"},
+      {kanji:"友だち", hira:"ともだち", roma:"tomodachi",es:"amigo / amiga", emoji:"👬"},
+      {kanji:"楽しい", hira:"たのしい", roma:"tanoshii", es:"divertido", emoji:"😄"},
+      {kanji:"週",     hira:"しゅう",   roma:"shuu",     es:"semana", emoji:"🗓️"},
+      {kanji:"〜回",   hira:"かい",     roma:"kai",      es:"veces (contador)", emoji:"🔁"}
+    ],
+    reading:"{{日本|にほん}}の [[0]]に {{興味|きょうみ}}が あって、[[3]]する ことに しました。{{日本人|にほんじん}}の [[4]]が できました。{{毎週|まいしゅう}} [[7]]、{{一緒|いっしょ}}に [[1]]を {{聞|き}}きに {{行|い}}きます。[[2]]も とても [[5]]です。この [[6]]は {{勉強|べんきょう}}も {{遊|あそ}}びも バランスが いいです。"
+  },
+  { id:11, topic:"そとで たべる 1", topicEs:"Comer fuera · Lección 11", emoji:"🍽️",
+    words:[
+      {kanji:"食べ物",     hira:"たべもの",     roma:"tabemono",      es:"comida", emoji:"🍽️"},
+      {kanji:"飲み物",     hira:"のみもの",     roma:"nomimono",      es:"bebida", emoji:"🥤"},
+      {kanji:"お茶",       hira:"おちゃ",       roma:"ocha",          es:"té", emoji:"🍵"},
+      {kanji:"お酒",       hira:"おさけ",       roma:"osake",         es:"alcohol / sake", emoji:"🍶"},
+      {kanji:"作ります",   hira:"つくります",   roma:"tsukurimasu",   es:"hacer / preparar", emoji:"👩‍🍳"},
+      {kanji:"待っています",hira:"まっています", roma:"matteimasu",    es:"estar esperando", emoji:"⏳"},
+      {kanji:"お願いします",hira:"おねがいします",roma:"onegaishimasu",es:"por favor (pedir)", emoji:"🙏"}
+    ],
+    reading:"レストランで {{好|す}}きな [[0]]と [[1]]を {{頼|たの}}みます。まず [[2]]を {{飲|の}}んで、それから [[3]]も {{少|すこ}}し {{飲|の}}みます。{{料理|りょうり}}を [[4]]{{間|あいだ}}、{{席|せき}}で [[5]]。すみません、メニューを [[6]]。"
+  },
+  { id:12, topic:"そとで たべる 2", topicEs:"Comer fuera · Lección 12", emoji:"🍜",
+    words:[
+      {kanji:"料理",   hira:"りょうり", roma:"ryouri",    es:"plato / cocina", emoji:"🍜"},
+      {kanji:"味",     hira:"あじ",     roma:"aji",       es:"sabor", emoji:"😋"},
+      {kanji:"色",     hira:"いろ",     roma:"iro",       es:"color", emoji:"🎨"},
+      {kanji:"野菜",   hira:"やさい",   roma:"yasai",     es:"verdura", emoji:"🥦"},
+      {kanji:"少し",   hira:"すこし",   roma:"sukoshi",   es:"un poco", emoji:"🤏"},
+      {kanji:"中",     hira:"なか",     roma:"naka",      es:"dentro / en medio", emoji:"📦"},
+      {kanji:"入ります",hira:"はいります",roma:"hairimasu",es:"entrar", emoji:"🚪"}
+    ],
+    reading:"この [[0]]は とても いい [[1]]です。{{赤い|あかい}} [[2]]の [[3]]が [[4]] {{入|はい}}っています。なべの [[5]]に スープを {{入|い}}れます。あとで {{肉|にく}}も [[6]]。"
+  },
+  { id:13, topic:"しゅっちょう 1", topicEs:"Viajes de negocios · Lección 13", emoji:"💼",
+    words:[
+      {kanji:"会社", hira:"かいしゃ", roma:"kaisha",   es:"empresa", emoji:"🏢"},
+      {kanji:"本社", hira:"ほんしゃ", roma:"honsha",   es:"sede central", emoji:"🏙️"},
+      {kanji:"支社", hira:"ししゃ",   roma:"shisha",   es:"sucursal", emoji:"🏬"},
+      {kanji:"出張", hira:"しゅっちょう",roma:"shucchou",es:"viaje de negocios", emoji:"💼"},
+      {kanji:"空港", hira:"くうこう", roma:"kuukou",   es:"aeropuerto", emoji:"✈️"},
+      {kanji:"出発", hira:"しゅっぱつ",roma:"shuppatsu",es:"salida / partida", emoji:"🛫"},
+      {kanji:"到着", hira:"とうちゃく",roma:"touchaku",es:"llegada", emoji:"🛬"},
+      {kanji:"午前", hira:"ごぜん",   roma:"gozen",    es:"mañana (a.m.)", emoji:"🌅"},
+      {kanji:"午後", hira:"ごご",     roma:"gogo",     es:"tarde (p.m.)", emoji:"🌇"}
+    ],
+    reading:"{{私|わたし}}の [[0]]の [[1]]は {{東京|とうきょう}}に あり、[[2]]は {{大阪|おおさか}}に あります。{{来週|らいしゅう}} {{大阪|おおさか}}へ [[3]]します。[[7]]に [[4]]から [[5]]して、[[8]]に {{大阪|おおさか}}に [[6]]する よていです。"
+  },
+  { id:14, topic:"しゅっちょう 2", topicEs:"Viajes de negocios · Lección 14", emoji:"🚆",
+    words:[
+      {kanji:"自分",   hira:"じぶん",   roma:"jibun",     es:"uno mismo", emoji:"🙋"},
+      {kanji:"電話",   hira:"でんわ",   roma:"denwa",     es:"teléfono", emoji:"☎️"},
+      {kanji:"電気",   hira:"でんき",   roma:"denki",     es:"electricidad / luz", emoji:"💡"},
+      {kanji:"電車",   hira:"でんしゃ", roma:"densha",    es:"tren", emoji:"🚆"},
+      {kanji:"車",     hira:"くるま",   roma:"kuruma",    es:"coche", emoji:"🚗"},
+      {kanji:"送ります",hira:"おくります",roma:"okurimasu",es:"enviar", emoji:"📤"},
+      {kanji:"使います",hira:"つかいます",roma:"tsukaimasu",es:"usar", emoji:"🛠️"},
+      {kanji:"借ります",hira:"かります", roma:"karimasu", es:"pedir prestado", emoji:"🤲"}
+    ],
+    reading:"[[0]]の {{部屋|へや}}には [[2]]が つきません。[[1]]で {{修理|しゅうり}}の {{人|ひと}}を よびます。{{明日|あした}} [[3]]で {{会社|かいしゃ}}に {{行|い}}きます。{{友だち|ともだち}}の [[4]]を [[7]]よていです。{{資料|しりょう}}を メールで [[5]]。{{新|あたら}}しい ソフトを [[6]]。"
+  },
+  { id:15, topic:"けんこう 1", topicEs:"Cuidar la salud · Lección 15", emoji:"💪",
+    words:[
+      {kanji:"体", hira:"からだ", roma:"karada",es:"cuerpo", emoji:"🧍"},
+      {kanji:"頭", hira:"あたま", roma:"atama", es:"cabeza", emoji:"🧠"},
+      {kanji:"目", hira:"め",     roma:"me",    es:"ojo", emoji:"👁️"},
+      {kanji:"口", hira:"くち",   roma:"kuchi", es:"boca", emoji:"👄"},
+      {kanji:"耳", hira:"みみ",   roma:"mimi",  es:"oreja", emoji:"👂"},
+      {kanji:"手", hira:"て",     roma:"te",    es:"mano", emoji:"✋"},
+      {kanji:"足", hira:"あし",   roma:"ashi",  es:"pie / pierna", emoji:"🦶"},
+      {kanji:"上", hira:"うえ",   roma:"ue",    es:"arriba", emoji:"⬆️"},
+      {kanji:"下", hira:"した",   roma:"shita", es:"abajo", emoji:"⬇️"}
+    ],
+    reading:"{{健康|けんこう}}な [[0]]の ために {{運動|うんどう}}します。[[1]]が {{痛|いた}}いので、[[2]]を とじて {{休|やす}}みます。[[3]]と [[4]]は {{大事|だいじ}}な きかんです。[[5]]で {{物|もの}}を {{持|も}}って、[[6]]で {{歩|ある}}きます。たなの [[7]]に {{本|ほん}}が あって、[[8]]に {{靴|くつ}}が あります。"
+  },
+  { id:16, topic:"けんこう 2", topicEs:"Cuidar la salud · Lección 16", emoji:"🏃",
+    words:[
+      {kanji:"毎〜",   hira:"まい",     roma:"mai",       es:"cada (prefijo, ej. 毎日)", emoji:"🔁"},
+      {kanji:"週末",   hira:"しゅうまつ",roma:"shuumatsu",es:"fin de semana", emoji:"🎉"},
+      {kanji:"元気",   hira:"げんき",   roma:"genki",     es:"energía / salud", emoji:"💪"},
+      {kanji:"外",     hira:"そと",     roma:"soto",      es:"afuera", emoji:"🌳"},
+      {kanji:"起きます",hira:"おきます",roma:"okimasu",   es:"levantarse", emoji:"⏰"},
+      {kanji:"歩く",   hira:"あるく",   roma:"aruku",     es:"caminar", emoji:"🚶"},
+      {kanji:"走ります",hira:"はしります",roma:"hashirimasu",es:"correr", emoji:"🏃"},
+      {kanji:"泳ぎます",hira:"およぎます",roma:"oyogimasu",es:"nadar", emoji:"🏊"}
+    ],
+    reading:"[[0]]{{朝|あさ}} はやく [[4]]。[[1]]には [[3]]で {{運動|うんどう}}します。{{公園|こうえん}}を [[5]]たり、{{公園|こうえん}}で [[6]]たり します。{{夏|なつ}}は プールで [[7]]。{{運動|うんどう}}すると [[2]]に なります。"
+  },
+  { id:17, topic:"おいわい 1", topicEs:"Celebraciones · Lección 17", emoji:"🎉",
+    words:[
+      {kanji:"お祝い",   hira:"おいわい",     roma:"oiwai",      es:"celebración", emoji:"🎉"},
+      {kanji:"誕生日",   hira:"たんじょうび", roma:"tanjoubi",   es:"cumpleaños", emoji:"🎂"},
+      {kanji:"結婚",     hira:"けっこん",     roma:"kekkon",     es:"matrimonio", emoji:"💍"},
+      {kanji:"絵",       hira:"え",           roma:"e",          es:"dibujo / pintura", emoji:"🎨"},
+      {kanji:"写真",     hira:"しゃしん",     roma:"shashin",    es:"foto", emoji:"📷"},
+      {kanji:"時計",     hira:"とけい",       roma:"tokei",      es:"reloj", emoji:"⌚"},
+      {kanji:"着ます",   hira:"きます",       roma:"kimasu",     es:"ponerse (ropa)", emoji:"👕"}
+    ],
+    reading:"{{来週|らいしゅう}} {{友だち|ともだち}}の [[1]]パーティーです。{{皆|みんな}}で [[0]]を します。プレゼントに [[3]]と [[5]]を {{選|えら}}びました。パーティーで [[4]]を たくさん {{撮|と}}ります。すてきな {{服|ふく}}を [[6]]。{{来年|らいねん}} [[2]]する そうです。"
+  },
+  { id:18, topic:"おいわい 2", topicEs:"Celebraciones · Lección 18", emoji:"📅",
+    words:[
+      {kanji:"先〜",   hira:"せん",   roma:"sen",     es:"anterior / pasado (prefijo, ej. 先週)", emoji:"⏮️"},
+      {kanji:"今〜",   hira:"こん",   roma:"kon",     es:"este / actual (prefijo, ej. 今週)", emoji:"▶️"},
+      {kanji:"来〜",   hira:"らい",   roma:"rai",     es:"próximo (prefijo, ej. 来週)", emoji:"⏭️"},
+      {kanji:"今年",   hira:"ことし", roma:"kotoshi", es:"este año", emoji:"📅"},
+      {kanji:"去年",   hira:"きょねん",roma:"kyonen", es:"año pasado", emoji:"🗓️"},
+      {kanji:"家",     hira:"いえ",   roma:"ie",      es:"casa", emoji:"🏠"},
+      {kanji:"思います",hira:"おもいます",roma:"omoimasu",es:"pensar / creer", emoji:"💭"}
+    ],
+    reading:"[[0]]{{週|しゅう}}は {{忙|いそが}}しかったです。[[1]]{{週|しゅう}}は {{少|すこ}}し {{暇|ひま}}です。[[2]]{{週|しゅう}}は {{旅行|りょこう}}に {{行|い}}きます。[[3]]は {{楽|たの}}しい {{年|とし}}だと [[6]]。[[4]]は [[5]]で のんびり しました。{{家族|かぞく}}と {{過|す}}ごす {{時間|じかん}}が {{大切|たいせつ}}です。"
+  }
+];
+
+/* ======================================================================
+   CONSTELACIONES — pares de radicales/kanji-componente que se combinan
+   para formar una palabra de la lección, con su significado original.
+   Actividad de curiosidades: sin puntuación por tiempo, sin cronómetro.
+   ====================================================================== */
+const CONSTELLATIONS = {
+  1: [ {a:'田',am:'campo de cultivo',b:'力',bm:'fuerza',result:'男',resultReading:'おとこ',resultMeaning:'hombre — fuerza que trabaja el campo'},
+       {a:'何',am:'qué',b:'人',bm:'persona',result:'何人',resultReading:'なんにん',resultMeaning:'cuántas personas'} ],
+  2: [ {a:'女',am:'mujer',b:'子',bm:'niño/a',result:'好',resultReading:'すき',resultMeaning:'gustar — a la mujer le gusta el niño'},
+       {a:'亻',am:'persona',b:'可',bm:'poder / aprobar',result:'何',resultReading:'なに',resultMeaning:'qué'},
+       {a:'外',am:'fuera',b:'国',bm:'país',result:'外国',resultReading:'がいこく',resultMeaning:'país extranjero'},
+       {a:'読',am:'leer',b:'書',bm:'escribir',result:'読書',resultReading:'どくしょ',resultMeaning:'lectura'} ],
+  3: [ {a:'艹',am:'planta',b:'化',bm:'cambiar',result:'花',resultReading:'はな',resultMeaning:'flor — la planta que cambia y florece'},
+       {a:'氵',am:'agua',b:'每',bm:'cada',result:'海',resultReading:'うみ',resultMeaning:'mar — agua en cada ola'},
+       {a:'禾',am:'grano / cereal',b:'火',bm:'fuego',result:'秋',resultReading:'あき',resultMeaning:'otoño — el grano madura con el calor'} ],
+  4: [ {a:'今',am:'ahora',b:'日',bm:'sol / día',result:'今日',resultReading:'きょう',resultMeaning:'hoy'},
+       {a:'天',am:'cielo',b:'気',bm:'energía / aire',result:'天気',resultReading:'てんき',resultMeaning:'clima'},
+       {a:'雨',am:'lluvia',b:'ヨ',bm:'mano',result:'雪',resultReading:'ゆき',resultMeaning:'nieve — lluvia que la mano recoge'},
+       {a:'雨',am:'lluvia',b:'云',bm:'nube / decir',result:'雲',resultReading:'くも',resultMeaning:'nube'} ],
+  5: [ {a:'人',am:'persona',b:'気',bm:'energía',result:'人気',resultReading:'にんき',resultMeaning:'popularidad'},
+       {a:'宀',am:'techo',b:'女',bm:'mujer',result:'安',resultReading:'やすい',resultMeaning:'barato / tranquilo — mujer bajo un techo'},
+       {a:'广',am:'edificio',b:'占',bm:'ocupar',result:'店',resultReading:'みせ',resultMeaning:'tienda — edificio ocupado'} ],
+  6: [ {a:'辶',am:'caminar',b:'首',bm:'cabeza',result:'道',resultReading:'みち',resultMeaning:'camino — la cabeza que avanza'},
+       {a:'辶',am:'caminar',b:'甬',bm:'pasaje',result:'通',resultReading:'とおり',resultMeaning:'avenida / pasar'},
+       {a:'大',am:'grande',b:'火',bm:'fuego',result:'赤',resultReading:'あかい',resultMeaning:'rojo — un gran fuego'} ],
+  7: [ {a:'時',am:'hora',b:'間',bm:'intervalo',result:'時間',resultReading:'じかん',resultMeaning:'tiempo'},
+       {a:'場',am:'lugar',b:'所',bm:'sitio',result:'場所',resultReading:'ばしょ',resultMeaning:'lugar'},
+       {a:'馬',am:'caballo',b:'尺',bm:'medida',result:'駅',resultReading:'えき',resultMeaning:'estación — caballos de posta medidos en el camino'} ],
+  8: [ {a:'食',am:'comer',b:'事',bm:'asunto',result:'食事',resultReading:'しょくじ',resultMeaning:'comida'},
+       {a:'仕',am:'servir',b:'事',bm:'asunto',result:'仕事',resultReading:'しごと',resultMeaning:'trabajo'},
+       {a:'十',am:'sol asomando',b:'月',bm:'luna',result:'朝',resultReading:'あさ',resultMeaning:'mañana — el sol sale y la luna aún se ve'} ],
+  9: [ {a:'学',am:'aprender',b:'校',bm:'escuela / corregir',result:'学校',resultReading:'がっこう',resultMeaning:'escuela'},
+       {a:'先',am:'antes / primero',b:'生',bm:'nacer / vida',result:'先生',resultReading:'せんせい',resultMeaning:'profesor/a'},
+       {a:'勉',am:'esforzarse',b:'強',bm:'fuerte',result:'勉強',resultReading:'べんきょう',resultMeaning:'estudio'} ],
+  10:[ {a:'文',am:'texto / letra',b:'化',bm:'cambiar',result:'文化',resultReading:'ぶんか',resultMeaning:'cultura'},
+       {a:'音',am:'sonido',b:'楽',bm:'diversión / música',result:'音楽',resultReading:'おんがく',resultMeaning:'música'},
+       {a:'旅',am:'viajar',b:'行',bm:'ir',result:'旅行',resultReading:'りょこう',resultMeaning:'viaje'} ],
+  11:[ {a:'氵',am:'agua',b:'酉',bm:'vasija de vino',result:'酒',resultReading:'おさけ',resultMeaning:'alcohol / sake — agua en una vasija'},
+       {a:'イ',am:'persona',b:'乍',bm:'actuar de repente',result:'作',resultReading:'つくります',resultMeaning:'hacer / crear'},
+       {a:'原',am:'origen / pradera',b:'頁',bm:'cabeza',result:'願',resultReading:'ねがいます',resultMeaning:'desear — la cabeza vuelta al origen'} ],
+  12:[ {a:'料',am:'material',b:'理',bm:'razón / lógica',result:'料理',resultReading:'りょうり',resultMeaning:'plato / cocina'},
+       {a:'野',am:'campo silvestre',b:'菜',bm:'verdura',result:'野菜',resultReading:'やさい',resultMeaning:'verdura'} ],
+  13:[ {a:'会',am:'reunirse',b:'社',bm:'santuario / compañía',result:'会社',resultReading:'かいしゃ',resultMeaning:'empresa'},
+       {a:'空',am:'cielo / vacío',b:'港',bm:'puerto',result:'空港',resultReading:'くうこう',resultMeaning:'aeropuerto'},
+       {a:'到',am:'llegar',b:'着',bm:'ponerse / llegar',result:'到着',resultReading:'とうちゃく',resultMeaning:'llegada'} ],
+  14:[ {a:'自',am:'uno mismo',b:'分',bm:'dividir / parte',result:'自分',resultReading:'じぶん',resultMeaning:'uno mismo'},
+       {a:'電',am:'electricidad / rayo',b:'話',bm:'hablar',result:'電話',resultReading:'でんわ',resultMeaning:'teléfono'},
+       {a:'イ',am:'persona',b:'吏',bm:'oficial',result:'使',resultReading:'つかいます',resultMeaning:'usar — persona al servicio'} ],
+  15:[ {a:'イ',am:'persona',b:'本',bm:'origen / base',result:'体',resultReading:'からだ',resultMeaning:'cuerpo — la base de la persona'},
+       {a:'豆',am:'frijol (fonético)',b:'頁',bm:'cabeza',result:'頭',resultReading:'あたま',resultMeaning:'cabeza'} ],
+  16:[ {a:'週',am:'semana',b:'末',bm:'final / punta',result:'週末',resultReading:'しゅうまつ',resultMeaning:'fin de semana'},
+       {a:'元',am:'origen',b:'気',bm:'energía',result:'元気',resultReading:'げんき',resultMeaning:'energía / salud'},
+       {a:'氵',am:'agua',b:'永',bm:'eterno / fluir',result:'泳',resultReading:'およぎます',resultMeaning:'nadar — fluir en el agua'} ],
+  17:[ {a:'結',am:'atar / unir',b:'婚',bm:'matrimonio',result:'結婚',resultReading:'けっこん',resultMeaning:'matrimonio'},
+       {a:'写',am:'copiar',b:'真',bm:'verdad',result:'写真',resultReading:'しゃしん',resultMeaning:'foto — copiar la verdad'},
+       {a:'時',am:'hora',b:'計',bm:'medir / contar',result:'時計',resultReading:'とけい',resultMeaning:'reloj'} ],
+  18:[ {a:'今',am:'ahora',b:'年',bm:'año',result:'今年',resultReading:'ことし',resultMeaning:'este año'},
+       {a:'去',am:'irse / pasado',b:'年',bm:'año',result:'去年',resultReading:'きょねん',resultMeaning:'año pasado'},
+       {a:'宀',am:'techo',b:'豕',bm:'cerdo',result:'家',resultReading:'いえ',resultMeaning:'casa — un cerdo bajo un techo'} ]
+};
+
+/* ====================================================================== */
+
+let mode = 'flash';          // 'flash' | 'read' | 'wheel' | 'constellation'
+let points = 0, streak = 0, correctCount = 0, wrongCount = 0;
+let currentLesson = null;
+
+let flashQueue = [];         // array of {word, box}
+let flashCurrent = null;
+let flashMastered = 0;
+let flashTotal = 0;
+
+let readWords = [];
+let readSelectedIndex = null;
+let readSolvedCount = 0;
+
+let wheelWords = [];
+let wheelRotation = 0;
+let wheelSpinning = false;
+let wheelCurrentIndex = null;
+let wheelAnswered = true;
+let wheelSolvedSet = new Set();
+let wheelTickHandle = null;
+
+let constPairs = [];
+let constTiles = [];
+let constSelectedTile = null;
+let constSolvedCount = 0;
+
+const lessonProgress = {};   // id -> mastered count (solo durante la sesión, en memoria)
+
+/* ---------- Sonido (Web Audio API, sin archivos externos) ---------- */
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(AC) audioCtx = new AC();
+  }
+  return audioCtx;
+}
+function playTone(freqStart, freqEnd, duration, type, volume){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd,1), ctx.currentTime + duration);
+  gain.gain.setValueAtTime(volume, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + duration);
+}
+function playCorrectSound(){
+  playTone(523.25, 784, 0.16, 'triangle', 0.18);
+  setTimeout(()=>playTone(659.25, 987.77, 0.14, 'triangle', 0.14), 90);
+}
+function playWrongSound(){
+  playTone(220, 120, 0.26, 'sawtooth', 0.13);
+}
+function playTickSound(){
+  playTone(900, 700, 0.05, 'square', 0.045);
+}
+function playLandSound(){
+  playTone(180, 90, 0.22, 'sawtooth', 0.16);
+  setTimeout(()=>playTone(740, 740, 0.12, 'triangle', 0.13), 120);
+}
+
+function updateScoreboard(){
+  document.getElementById('sc-points').textContent = points;
+  document.getElementById('sc-streak').textContent = streak;
+  const total = correctCount + wrongCount;
+  document.getElementById('sc-accuracy').textContent = total ? Math.round(correctCount/total*100)+'%' : '—';
+}
+
+function resetScore(){
+  if(!confirm('¿Reiniciar la puntuación, la racha y la precisión a cero?')) return;
+  points = 0; streak = 0; correctCount = 0; wrongCount = 0;
+  updateScoreboard();
+  showToast('Puntuación reiniciada ↺');
+}
+
+function pulsePoints(delta, x, y){
+  const el = document.createElement('div');
+  el.className = 'float-particle';
+  el.textContent = delta > 0 ? '+' + delta + ' ✨' : '💧';
+  el.style.left = (x||window.innerWidth/2) + 'px';
+  el.style.top = (y||window.innerHeight/2) + 'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+
+function showToast(msg){
+  const t = document.getElementById('hint-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+/* ---------- Navegación entre pantallas ---------- */
+function showScreen(name){
+  ['menu','flash','read','wheel','constellation','done'].forEach(s=>{
+    document.getElementById('screen-'+s).style.display = (s===name) ? 'block' : 'none';
+  });
+}
+function goToMenu(){
+  clearInterval(wheelTickHandle);
+  renderLessonGrid();
+  showScreen('menu');
+}
+
+function setMode(m){
+  mode = m;
+  document.querySelectorAll('.mode-tab').forEach(b=>b.classList.toggle('active', b.dataset.mode===m));
+  const titles = { flash:'Elige una lección', read:'Elige una lección para leer', wheel:'Elige una lección para la ruleta', constellation:'Elige una lección para las constelaciones' };
+  const subs = {
+    flash:'Practica los kanji con tarjetas de repetición espaciada.',
+    read:'Relaciona cada palabra subrayada del texto con su kanji.',
+    wheel:'Gira la ruleta y escribe la pronunciación del kanji que salga.',
+    constellation:'Une radicales para formar los kanji de la lección — actividad de curiosidades, sin cronómetro.'
+  };
+  document.getElementById('menu-title').textContent = titles[m];
+  document.getElementById('menu-sub').textContent = subs[m];
+  renderLessonGrid();
+}
+
+function renderLessonGrid(){
+  const grid = document.getElementById('lesson-grid');
+  grid.innerHTML = '';
+  LEVELS.forEach(level=>{
+    const mastered = lessonProgress[level.id] || 0;
+    const pct = Math.round((mastered/level.words.length)*100);
+    const card = document.createElement('div');
+    card.className = 'lesson-card';
+    card.innerHTML = `
+      <span class="num">${level.id}</span>
+      <span class="topic">${level.emoji} ${level.topic}</span>
+      <span class="topic-es">${level.topicEs}</span>
+      <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+    `;
+    card.onclick = ()=>{
+      if(mode==='flash') startFlash(level);
+      else if(mode==='read') startRead(level);
+      else if(mode==='wheel') startWheel(level);
+      else startConstellation(level);
+    };
+    grid.appendChild(card);
+  });
+}
+
+/* ======================= JUEGO 1 — TARJETAS ======================= */
+function startFlash(level){
+  currentLesson = level;
+  flashQueue = level.words.map(w=>({word:w, box:1}));
+  flashTotal = flashQueue.length;
+  flashMastered = 0;
+  document.getElementById('flash-title').textContent = `${level.emoji} Lección ${level.id} · ${level.topicEs}`;
+  showScreen('flash');
+  nextFlashCard();
+}
+
+function updateFlashProgress(){
+  const pct = Math.round((flashMastered/flashTotal)*100);
+  document.getElementById('flash-progress-fill').style.width = pct+'%';
+}
+
+function nextFlashCard(){
+  updateFlashProgress();
+  if(flashQueue.length===0){
+    finishLesson('flash');
+    return;
+  }
+  flashCurrent = flashQueue.shift();
+  const w = flashCurrent.word;
+  document.getElementById('card-emoji').textContent = w.emoji;
+  document.getElementById('card-kanji').textContent = w.kanji;
+  document.getElementById('card-hira').textContent = w.hira;
+  document.getElementById('card-roma').textContent = w.roma;
+  document.getElementById('card-es').textContent = w.es;
+  document.getElementById('cardInner').classList.remove('flipped');
+  document.getElementById('btn-yes').disabled = true;
+  document.getElementById('btn-no').disabled = true;
+}
+
+function flipCard(){
+  const inner = document.getElementById('cardInner');
+  inner.classList.toggle('flipped');
+  const revealed = inner.classList.contains('flipped');
+  document.getElementById('btn-yes').disabled = !revealed;
+  document.getElementById('btn-no').disabled = !revealed;
+}
+
+function answerCard(knewIt){
+  const rect = document.getElementById('card3d').getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top;
+  if(knewIt){
+    flashCurrent.box++;
+    correctCount++; streak++;
+    const gained = 10;
+    points += gained;
+    pulsePoints(gained, cx, cy);
+    playCorrectSound();
+    if(flashCurrent.box > 3){
+      flashMastered++;
+      lessonProgress[currentLesson.id] = flashMastered;
+    } else {
+      const pos = Math.min(flashQueue.length, 2 + flashCurrent.box);
+      flashQueue.splice(pos, 0, flashCurrent);
+    }
+  } else {
+    wrongCount++; streak = 0;
+    playWrongSound();
+    flashCurrent.box = 1;
+    flashQueue.splice(Math.min(2, flashQueue.length), 0, flashCurrent);
+  }
+  updateScoreboard();
+  nextFlashCard();
+}
+
+/* ======================= JUEGO 2 — LECTURA ======================= */
+function startRead(level){
+  currentLesson = level;
+  readWords = level.words.map((w,i)=>({...w, idx:i, solved:false}));
+  readSelectedIndex = null;
+  readSolvedCount = 0;
+  document.getElementById('read-title').textContent = `${level.emoji} Lección ${level.id} · ${level.topicEs}`;
+  renderReadingText(level);
+  renderTileBank();
+  showScreen('read');
+}
+
+function renderReadingText(level){
+  let html = level.reading;
+  // Palabras decorativas ya en kanji+furigana desde el inicio: {{kanji|hiragana}}
+  html = html.replace(/\{\{([^|}]+)\|([^}]+)\}\}/g, (m,k,h)=> `<ruby>${k}<rt>${h}</rt></ruby>`);
+  // Palabras interactivas a relacionar: [[i]]
+  html = html.replace(/\[\[(\d+)\]\]/g, (m, idx)=>{
+    idx = parseInt(idx,10);
+    return `<span class="hira-slot" data-idx="${idx}" onclick="selectSlot(${idx}, this)">${readWords[idx].hira}</span>`;
+  });
+  document.getElementById('reading-text').innerHTML = html;
+}
+
+function renderTileBank(){
+  const bank = document.getElementById('tile-bank');
+  bank.innerHTML = '';
+  const shuffled = [...readWords].sort(()=>Math.random()-0.5);
+  shuffled.forEach(w=>{
+    const tile = document.createElement('div');
+    tile.className = 'kanji-tile';
+    tile.dataset.idx = w.idx;
+    tile.textContent = w.kanji;
+    tile.onclick = (e)=> attemptMatch(w.idx, tile, e);
+    bank.appendChild(tile);
+  });
+}
+
+function selectSlot(idx, el){
+  if(el.classList.contains('solved')) return;
+  document.querySelectorAll('.hira-slot').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  readSelectedIndex = idx;
+}
+
+function attemptMatch(tileIdx, tileEl, evt){
+  if(readSelectedIndex===null){
+    showToast('Primero toca una palabra subrayada del texto ☝️');
+    return;
+  }
+  const matchedIdx = readSelectedIndex;
+  const slotEl = document.querySelector(`.hira-slot[data-idx="${matchedIdx}"]`);
+  const rect = tileEl.getBoundingClientRect();
+  if(tileIdx === matchedIdx){
+    // acierto: la palabra pasa de hiragana simple a kanji + furigana
+    const w = readWords[matchedIdx];
+    slotEl.classList.remove('selected');
+    slotEl.classList.add('solved');
+    slotEl.innerHTML = `<ruby>${w.kanji}<rt>${w.hira}</rt></ruby>`;
+    tileEl.classList.add('solved');
+    correctCount++; streak++;
+    const gained = 15;
+    points += gained;
+    pulsePoints(gained, rect.left+rect.width/2, rect.top);
+    playCorrectSound();
+    readSolvedCount++;
+    readSelectedIndex = null;
+    updateScoreboard();
+    if(readSolvedCount >= readWords.length){
+      lessonProgress[currentLesson.id] = readWords.length;
+      setTimeout(()=>finishLesson('read'), 500);
+    }
+  } else {
+    // fallo
+    wrongCount++; streak = 0;
+    playWrongSound();
+    tileEl.classList.add('shake');
+    slotEl.classList.add('shake');
+    setTimeout(()=>{ tileEl.classList.remove('shake'); slotEl.classList.remove('shake'); }, 400);
+    updateScoreboard();
+  }
+}
+
+/* ======================= JUEGO 3 — RULETA ======================= */
+function startWheel(level){
+  currentLesson = level;
+  wheelWords = level.words.map((w,i)=>({...w, idx:i}));
+  wheelSolvedSet = new Set();
+  wheelCurrentIndex = null;
+  wheelAnswered = true;
+  document.getElementById('wheel-title').textContent = `${level.emoji} Lección ${level.id} · ${level.topicEs}`;
+  buildWheel();
+  resetWheelPanel();
+  document.getElementById('wheel-spin-btn').disabled = false;
+  showScreen('wheel');
+}
+
+function buildWheel(){
+  const circle = document.getElementById('wheel-circle');
+  circle.innerHTML = '';
+  circle.style.transition = 'none';
+  wheelRotation = 0;
+  circle.style.transform = 'rotate(0deg)';
+  const n = wheelWords.length;
+  const segAngle = 360/n;
+  const parts = [];
+  wheelWords.forEach((w,i)=>{
+    const c = (i%2===0) ? 'var(--color-bone)' : 'var(--color-paper)';
+    parts.push(`${c} ${i*segAngle}deg ${(i+1)*segAngle}deg`);
+  });
+  circle.style.background = `conic-gradient(${parts.join(',')})`;
+  const radius = circle.clientWidth ? circle.clientWidth/2 : 204;
+  const dist = radius * 0.42;
+  wheelWords.forEach((w,i)=>{
+    const mid = i*segAngle + segAngle/2;
+    const label = document.createElement('div');
+    label.className = 'wheel-label';
+    label.textContent = w.kanji;
+    label.style.transform = `rotate(${mid-90}deg) translate(${dist}px, -0.55em)`;
+    circle.appendChild(label);
+  });
+  void circle.offsetWidth; // forzar reflow antes de reactivar la transición
+  circle.style.transition = 'transform 3.2s cubic-bezier(.12,.67,.1,1)';
+}
+
+function spinWheel(){
+  if(wheelSpinning) return;
+  if(!wheelAnswered){ showToast('Responde la palabra actual antes de girar de nuevo'); return; }
+  wheelSpinning = true;
+  document.getElementById('wheel-spin-btn').disabled = true;
+  const n = wheelWords.length;
+  const segAngle = 360/n;
+  const winIndex = Math.floor(Math.random()*n);
+  const midAngle = winIndex*segAngle + segAngle/2;
+  const jitter = (Math.random()-0.5) * (segAngle*0.6);
+  const targetMod = ((360 - midAngle - jitter) % 360 + 360) % 360;
+  const fullSpins = 5*360 + Math.floor(Math.random()*2)*360;
+  const currentMod = ((wheelRotation % 360)+360)%360;
+  const delta = ((targetMod - currentMod)+360)%360;
+  wheelRotation += fullSpins + delta;
+  const circle = document.getElementById('wheel-circle');
+  circle.style.transform = `rotate(${wheelRotation}deg)`;
+
+  // sonido de "traqueteo" mientras gira, más lento con el paso del tiempo
+  let tickDelay = 70;
+  clearInterval(wheelTickHandle);
+  function scheduleTick(){
+    wheelTickHandle = setTimeout(()=>{
+      playTickSound();
+      tickDelay = Math.min(tickDelay * 1.11, 260);
+      if(wheelSpinning) scheduleTick();
+    }, tickDelay);
+  }
+  scheduleTick();
+
+  setTimeout(()=>{
+    wheelSpinning = false;
+    clearTimeout(wheelTickHandle);
+    playLandSound();
+    landOnWord(winIndex);
+  }, 3300);
+}
+
+function landOnWord(index){
+  wheelCurrentIndex = index;
+  wheelAnswered = false;
+  const w = wheelWords[index];
+  document.getElementById('wheel-result-emoji').textContent = w.emoji;
+  document.getElementById('wheel-result-kanji').textContent = w.kanji;
+  document.getElementById('wheel-placeholder').style.display = 'none';
+  document.getElementById('wheel-answer-area').style.display = 'flex';
+  const feedback = document.getElementById('wheel-feedback');
+  feedback.textContent = '';
+  feedback.className = 'wheel-feedback';
+  const input = document.getElementById('wheel-input');
+  input.value = '';
+  input.disabled = false;
+  input.focus();
+  document.getElementById('wheel-check-btn').style.display = 'inline-block';
+  document.getElementById('wheel-check-btn').disabled = false;
+  document.getElementById('wheel-next-btn').style.display = 'none';
+}
+
+function normalizeAnswer(s){
+  return s.trim().toLowerCase().replace(/\s+/g,'');
+}
+
+function checkWheelAnswer(){
+  if(wheelCurrentIndex===null || wheelAnswered) return;
+  const w = wheelWords[wheelCurrentIndex];
+  const input = document.getElementById('wheel-input');
+  const val = normalizeAnswer(input.value);
+  const okHira = val === w.hira;
+  const okRoma = val === w.roma.toLowerCase().replace(/\s+/g,'');
+  const feedback = document.getElementById('wheel-feedback');
+  const rect = input.getBoundingClientRect();
+  if(val.length>0 && (okHira||okRoma)){
+    feedback.textContent = '✅ ¡Correcto! ' + w.hira + ' (' + w.roma + ') — ' + w.es;
+    feedback.className = 'wheel-feedback correct';
+    correctCount++; streak++;
+    const gained = 20;
+    points += gained;
+    pulsePoints(gained, rect.left+rect.width/2, rect.top);
+    playCorrectSound();
+    wheelSolvedSet.add(wheelCurrentIndex);
+    lessonProgress[currentLesson.id] = wheelSolvedSet.size;
+  } else {
+    feedback.textContent = '❌ Era: ' + w.hira + ' (' + w.roma + ') — ' + w.es;
+    feedback.className = 'wheel-feedback wrong';
+    wrongCount++; streak = 0;
+    playWrongSound();
+    input.classList.add('shake');
+    setTimeout(()=>input.classList.remove('shake'), 400);
+  }
+  updateScoreboard();
+  input.disabled = true;
+  wheelAnswered = true;
+  document.getElementById('wheel-check-btn').style.display = 'none';
+  document.getElementById('wheel-next-btn').style.display = 'inline-block';
+  if(wheelSolvedSet.size >= wheelWords.length){
+    setTimeout(()=>finishLesson('wheel'), 900);
+  }
+}
+
+function prepareNextSpin(){
+  document.getElementById('wheel-answer-area').style.display = 'none';
+  document.getElementById('wheel-placeholder').style.display = 'block';
+  document.getElementById('wheel-placeholder').textContent = 'Gira la ruleta para ver el siguiente kanji.';
+  document.getElementById('wheel-spin-btn').disabled = false;
+}
+
+function resetWheelPanel(){
+  document.getElementById('wheel-placeholder').style.display = 'block';
+  document.getElementById('wheel-placeholder').textContent = 'Gira la ruleta para ver tu primer kanji.';
+  document.getElementById('wheel-answer-area').style.display = 'none';
+}
+
+/* ======================= JUEGO 4 — CONSTELACIONES ======================= */
+function startConstellation(level){
+  currentLesson = level;
+  constPairs = CONSTELLATIONS[level.id] || [];
+  constSelectedTile = null;
+  constSolvedCount = 0;
+  document.getElementById('constellation-title').textContent = `${level.emoji} Lección ${level.id} · ${level.topicEs}`;
+  const board = document.getElementById('constellation-board');
+  board.querySelectorAll('.radical-tile').forEach(el=>el.remove());
+  document.getElementById('constellation-svg').innerHTML = '';
+  document.getElementById('constellation-info-panel').innerHTML =
+    '<div class="constellation-info-placeholder">Toca un radical del tablero para descubrir su historia.</div>';
+
+  if(constPairs.length === 0){
+    document.getElementById('constellation-progress-label').textContent = '';
+    const msg = document.createElement('div');
+    msg.className = 'constellation-info-placeholder';
+    msg.style.padding = '40px 20px';
+    msg.textContent = 'Esta lección no tiene suficientes kanji con radicales sencillos para armar constelaciones. Prueba con otra lección.';
+    board.appendChild(msg);
+    showScreen('constellation');
+    return;
+  }
+
+  document.getElementById('constellation-progress-label').textContent = `Constelaciones formadas: 0 / ${constPairs.length}`;
+
+  // construir tiles: 2 por par (a y b), posiciones repartidas en el tablero
+  constTiles = [];
+  constPairs.forEach((p,pi)=>{
+    constTiles.push({char:p.a, meaning:p.am, pairIndex:pi, role:'a'});
+    constTiles.push({char:p.b, meaning:p.bm, pairIndex:pi, role:'b'});
+  });
+  constTiles = constTiles.sort(()=>Math.random()-0.5);
+
+  const n = constTiles.length;
+  const cols = Math.ceil(Math.sqrt(n*1.6));
+  const rows = Math.ceil(n/cols);
+  let cells = [];
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) cells.push({c,r});
+  cells = cells.sort(()=>Math.random()-0.5).slice(0,n);
+
+  constTiles.forEach((t,i)=>{
+    const cell = cells[i];
+    const xPct = ((cell.c+0.5)/cols)*82 + 9 + (Math.random()*6-3);
+    const yPct = ((cell.r+0.5)/rows)*80 + 10 + (Math.random()*6-3);
+    t.x = xPct; t.y = yPct;
+    const tile = document.createElement('div');
+    tile.className = 'radical-tile';
+    tile.style.left = xPct+'%';
+    tile.style.top = yPct+'%';
+    tile.textContent = t.char;
+    tile.dataset.tileIndex = i;
+    tile.onclick = ()=> clickRadical(i, tile);
+    board.appendChild(tile);
+    t.el = tile;
+  });
+
+  showScreen('constellation');
+}
+
+function showConstellationInfo(char, reading, meaning){
+  const panel = document.getElementById('constellation-info-panel');
+  panel.innerHTML = `
+    <div class="constellation-info-char">${char}</div>
+    ${reading ? `<div class="constellation-info-reading">${reading}</div>` : ''}
+    <div class="constellation-info-meaning">${meaning}</div>
+  `;
+}
+
+function clickRadical(tileIndex, tileEl){
+  const tile = constTiles[tileIndex];
+
+  // siempre muestra la info de lo que se toca, esté resuelto o no
+  showConstellationInfo(tile.char, '', 'Significado original: ' + tile.meaning);
+
+  if(tileEl.classList.contains('solved')) return;
+
+  if(constSelectedTile === null){
+    tileEl.classList.add('selected');
+    constSelectedTile = tileIndex;
+    return;
+  }
+
+  if(constSelectedTile === tileIndex){
+    tileEl.classList.remove('selected');
+    constSelectedTile = null;
+    return;
+  }
+
+  const firstTile = constTiles[constSelectedTile];
+  const firstEl = firstTile.el;
+
+  if(firstTile.pairIndex === tile.pairIndex && firstTile.role !== tile.role){
+    // acierto: unir con una línea y revelar el kanji compuesto
+    drawConstellationLine(firstTile, tile);
+    firstEl.classList.remove('selected');
+    firstEl.classList.add('solved');
+    tileEl.classList.add('solved');
+    const pair = constPairs[tile.pairIndex];
+    correctCount++; streak++;
+    const gained = 10;
+    points += gained;
+    const rect = tileEl.getBoundingClientRect();
+    pulsePoints(gained, rect.left+rect.width/2, rect.top);
+    playCorrectSound();
+    updateScoreboard();
+    showConstellationInfo(pair.result, pair.resultReading, pair.resultMeaning);
+    constSolvedCount++;
+    lessonProgress[currentLesson.id] = constSolvedCount;
+    document.getElementById('constellation-progress-label').textContent = `Constelaciones formadas: ${constSolvedCount} / ${constPairs.length}`;
+    constSelectedTile = null;
+    if(constSolvedCount >= constPairs.length){
+      setTimeout(()=>finishLesson('constellation'), 900);
+    }
+  } else {
+    // fallo
+    wrongCount++; streak = 0;
+    playWrongSound();
+    firstEl.classList.add('shake');
+    tileEl.classList.add('shake');
+    setTimeout(()=>{ firstEl.classList.remove('shake'); tileEl.classList.remove('shake'); }, 400);
+    firstEl.classList.remove('selected');
+    updateScoreboard();
+    constSelectedTile = null;
+  }
+}
+
+function drawConstellationLine(t1, t2){
+  const svg = document.getElementById('constellation-svg');
+  const board = document.getElementById('constellation-board');
+  const w = board.clientWidth, h = board.clientHeight;
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', (t1.x/100*w).toFixed(1));
+  line.setAttribute('y1', (t1.y/100*h).toFixed(1));
+  line.setAttribute('x2', (t2.x/100*w).toFixed(1));
+  line.setAttribute('y2', (t2.y/100*h).toFixed(1));
+  line.setAttribute('class', 'const-line');
+  svg.appendChild(line);
+}
+
+/* ---------- Pantalla final ---------- */
+function finishLesson(fromMode){
+  const total = correctCount + wrongCount;
+  const acc = total ? Math.round(correctCount/total*100) : 100;
+  const headings = { flash:'¡Tarjetas completadas! 🎴', read:'¡Texto resuelto! 📖', wheel:'¡Ruleta completada! 🎡', constellation:'¡Constelaciones completas! 🌌' };
+  document.getElementById('done-heading').textContent = headings[fromMode];
+  document.getElementById('done-text').textContent =
+    `Lección ${currentLesson.id} · ${currentLesson.topicEs} — precisión de la sesión: ${acc}%`;
+  const retryBtn = document.getElementById('done-retry');
+  retryBtn.onclick = ()=>{
+    if(fromMode==='flash') startFlash(currentLesson);
+    else if(fromMode==='read') startRead(currentLesson);
+    else if(fromMode==='wheel') startWheel(currentLesson);
+    else startConstellation(currentLesson);
+  };
+  showScreen('done');
+}
+
+/* ---------- Inicio ---------- */
+renderLessonGrid();
+updateScoreboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>猫の橋 · El puente del gato — Verbos Marugoto A2-1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+
+/* ======================================================================
+   PALETA DE COLORES — la misma que el juego de kanji, cámbiala aquí
+   ====================================================================== */
+:root{
+  --color-bone:        #f1ead9;
+  --color-bone-soft:   #e8dfc9;
+  --color-paper:       #faf6ec;
+  --color-red:          #b23a2f;
+  --color-red-dark:     #8c2b22;
+  --color-green:        #3c4a37;
+  --color-green-soft:   #59695a;
+  --color-ink:          #2a2620;
+  --color-ink-soft:     #6a6153;
+  --color-correct:      #4b6b45;
+  --color-wrong:        #a8352b;
+  --radius-s: 10px;
+  --radius-m: 16px;
+  --radius-l: 26px;
+  --font-display: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+  --font-body:    'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:
+    radial-gradient(circle at 12% 8%, rgba(178,58,47,.06), transparent 40%),
+    radial-gradient(circle at 92% 85%, rgba(60,74,55,.08), transparent 45%),
+    var(--color-bone);
+  color:var(--color-ink);
+  font-family:var(--font-body);
+  min-height:100vh;
+  padding:20px 14px 60px;
+}
+
+.wrap{ max-width:1080px; margin:0 auto; }
+
+/* ---------- Encabezado + marcador (idéntico al juego de kanji) ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:14px; margin-bottom:22px; flex-wrap:wrap;
+}
+.brand{ display:flex; align-items:center; gap:12px; }
+.brand h1{
+  font-family:var(--font-display); font-weight:900; letter-spacing:.01em;
+  font-size:1.5rem; margin:0; color:var(--color-ink);
+}
+.brand small{ display:block; color:var(--color-ink-soft); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; font-weight:500; }
+
+.scoreboard{
+  display:flex; align-items:center; gap:10px;
+  background:var(--color-paper); border:1px solid var(--color-bone-soft);
+  border-radius:999px; padding:6px 10px 6px 6px; box-shadow:0 2px 0 rgba(42,38,32,.06);
+}
+.hanko{
+  width:44px; height:44px; border-radius:10px; background:var(--color-red);
+  color:var(--color-paper); display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:800; font-size:.95rem; flex-shrink:0;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.25);
+  transform:rotate(-3deg);
+}
+.score-item{ text-align:left; padding:0 8px; line-height:1.1; }
+.score-item .num{ font-weight:700; font-size:1rem; color:var(--color-ink); }
+.score-item .lbl{ font-size:.62rem; color:var(--color-ink-soft); text-transform:uppercase; letter-spacing:.05em; font-weight:500; }
+.score-divider{ width:1px; height:26px; background:var(--color-bone-soft); }
+.reset-btn{
+  border:none; background:var(--color-bone-soft); color:var(--color-ink);
+  width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1rem;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:transform .2s ease, background .2s ease;
+}
+.reset-btn:hover{ background:var(--color-red); color:var(--color-paper); transform:rotate(-45deg); }
+
+/* ---------- Paneles generales ---------- */
+.panel{
+  background:var(--color-paper); border-radius:var(--radius-l);
+  padding:26px 32px; box-shadow:0 10px 24px -14px rgba(42,38,32,.35);
+  border:1px solid var(--color-bone-soft);
+}
+.section-title{
+  font-family:var(--font-display); font-weight:700; font-size:1.1rem;
+  color:var(--color-green); margin:0 0 4px;
+}
+.section-sub{ color:var(--color-ink-soft); font-size:.85rem; margin:0 0 16px; }
+
+.back-btn{
+  border:none; background:none; color:var(--color-ink-soft); cursor:pointer;
+  font-family:var(--font-body); font-weight:500; font-size:.85rem; margin-bottom:12px; padding:4px 0;
+  display:flex; align-items:center; gap:6px;
+}
+.back-btn:hover{ color:var(--color-red); }
+
+.pill-btn{
+  border:none; cursor:pointer; padding:12px 20px; border-radius:999px; font-weight:700;
+  font-family:var(--font-body); font-size:.85rem; transition:transform .15s ease, filter .15s ease;
+}
+.pill-btn:hover{ transform:translateY(-2px); filter:brightness(1.05); }
+.pill-btn:disabled{ opacity:.5; cursor:default; transform:none; filter:none; }
+.pill-btn.primary{ background:var(--color-red); color:var(--color-paper); }
+.pill-btn.secondary{ background:var(--color-bone-soft); color:var(--color-ink); }
+
+@keyframes shakeX{
+  0%,100%{ transform:translateX(0); }
+  20%{ transform:translateX(-6px); }
+  40%{ transform:translateX(6px); }
+  60%{ transform:translateX(-4px); }
+  80%{ transform:translateX(4px); }
+}
+
+.float-particle{
+  position:fixed; pointer-events:none; font-size:1.3rem; z-index:60; font-weight:700;
+  animation:floatUp 1s ease-out forwards;
+}
+@keyframes floatUp{
+  0%{ opacity:1; transform:translateY(0) scale(1); }
+  100%{ opacity:0; transform:translateY(-70px) scale(1.3); }
+}
+
+.hint-toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:var(--color-ink); color:var(--color-paper); padding:10px 18px; border-radius:999px;
+  font-size:.82rem; font-weight:500; opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  z-index:50;
+}
+.hint-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ======================= PANTALLA: MENÚ ======================= */
+.cat-hero{ text-align:center; font-size:3rem; margin:2px 0 2px; }
+.intro-card{
+  background:var(--color-bone); border:1px solid var(--color-bone-soft); border-radius:var(--radius-m);
+  padding:16px 18px; margin-bottom:20px;
+}
+.intro-card p{ margin:0; color:var(--color-ink-soft); font-size:.83rem; line-height:1.55; }
+
+.filter-section{ margin-bottom:8px; }
+.filter-section h3{ font-family:var(--font-display); font-size:.95rem; color:var(--color-green); margin:0 0 4px; }
+.filter-section .filter-sub{ font-size:.78rem; color:var(--color-ink-soft); margin:0 0 14px; }
+
+.chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+.level-toggle{
+  border:2px solid var(--color-bone-soft); background:var(--color-bone); color:var(--color-ink);
+  border-radius:999px; padding:10px 20px; font-family:var(--font-display); font-weight:800; font-size:.88rem;
+  cursor:pointer; transition:background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
+}
+.level-toggle:hover{ transform:translateY(-1px); }
+.level-toggle.active{ background:var(--color-red); border-color:var(--color-red); color:var(--color-paper); }
+.level-toggle .level-count{ display:block; font-size:.66rem; font-weight:500; margin-top:2px; opacity:.85; font-family:var(--font-body); }
+
+/* ---------- Panel de 4 columnas: formales / planas / compartidas / dificultad ---------- */
+.filter-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:6px; align-items:start; }
+@media (max-width:900px){ .filter-grid{ grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:560px){ .filter-grid{ grid-template-columns:1fr; } }
+
+.filter-col{ display:flex; flex-direction:column; gap:8px; background:var(--color-bone); border:1px solid var(--color-bone-soft); border-radius:var(--radius-m); padding:12px; }
+
+.col-title{
+  font-family:var(--font-display); font-size:.72rem; color:var(--color-ink-soft); text-transform:uppercase;
+  letter-spacing:.05em; font-weight:700; text-align:center; margin:0 0 2px;
+}
+
+.form-toggle{
+  width:100%; border:2px solid var(--color-bone-soft); background:var(--color-paper); color:var(--color-ink);
+  border-radius:var(--radius-s); padding:10px 10px; font-family:var(--font-body); font-weight:700; font-size:.82rem;
+  cursor:pointer; transition:background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
+  line-height:1.3;
+}
+.form-toggle:hover{ transform:translateY(-1px); }
+.form-toggle.active{ background:var(--color-green); border-color:var(--color-green); color:var(--color-paper); }
+.form-toggle .toggle-sub{ display:block; font-size:.66rem; font-weight:500; margin-top:2px; opacity:.8; }
+
+.diff-btn-v{
+  width:100%; border:none; cursor:pointer; padding:10px 8px; border-radius:var(--radius-s);
+  background:var(--color-bone-soft); color:var(--color-ink-soft); font-family:var(--font-body); font-weight:700; font-size:.82rem;
+  transition:background .2s ease, color .2s ease, transform .15s ease;
+}
+.diff-btn-v:hover{ transform:translateY(-1px); }
+.diff-btn-v.active{ background:var(--color-green); color:var(--color-paper); }
+.diff-sub{ display:block; font-size:.68rem; font-weight:500; margin-top:2px; opacity:.85; }
+
+.selection-warning{ color:var(--color-wrong); font-size:.8rem; font-weight:700; text-align:center; min-height:1.2em; margin-top:12px; }
+.menu-actions{ display:flex; justify-content:center; margin-top:10px; }
+
+/* ======================= ESCENA DEL PUENTE ======================= */
+.bridge-progress-label{ text-align:center; color:var(--color-ink-soft); font-size:.8rem; font-weight:500; margin-bottom:8px; }
+.bridge-scene{
+  background:linear-gradient(180deg, var(--color-bone) 0%, var(--color-bone-soft) 100%);
+  border-radius:var(--radius-l); padding:34px 18px 46px; position:relative; overflow:hidden;
+  margin-bottom:22px; border:1px solid var(--color-bone-soft);
+}
+.river{
+  position:absolute; left:0; right:0; bottom:0; height:56px;
+  background:repeating-linear-gradient(45deg, rgba(60,74,55,.09) 0 14px, rgba(60,74,55,.15) 14px 28px);
+}
+.river-emoji{ position:absolute; bottom:6px; font-size:1.1rem; opacity:.55; }
+.bridge-track{ position:relative; height:96px; margin:0 auto; max-width:640px; }
+.bridge-rail{
+  position:absolute; left:2%; right:2%; top:50%; height:6px; background:var(--color-bone-soft);
+  border-radius:4px; transform:translateY(-50%);
+}
+.stone{
+  position:absolute; top:50%; width:32px; height:32px; border-radius:50%;
+  background:var(--color-paper); border:2px solid var(--color-bone-soft);
+  transform:translate(-50%,-50%); display:flex; align-items:center; justify-content:center;
+  font-size:.85rem; color:var(--color-ink-soft); transition:background .3s ease, border-color .3s ease, color .3s ease;
+}
+.stone.done{ background:var(--color-green); border-color:var(--color-green); color:var(--color-paper); }
+.stone.current{ border-color:var(--color-red); box-shadow:0 0 0 4px rgba(178,58,47,.15); }
+.cat-slot{
+  position:absolute; top:50%; transform:translate(-50%,-118%);
+  transition:left .6s cubic-bezier(.4,.2,.2,1); z-index:5;
+}
+.cat-emoji-inner{
+  display:inline-block; font-size:2.3rem;
+  filter:drop-shadow(0 4px 4px rgba(42,38,32,.35));
+}
+.cat-emoji-inner.hop{ animation:catHop .6s ease; }
+@keyframes catHop{
+  0%{ transform:translateY(0) scale(1); }
+  35%{ transform:translateY(-22px) scale(1.12) rotate(-6deg); }
+  70%{ transform:translateY(-4px) scale(1.05) rotate(4deg); }
+  100%{ transform:translateY(0) scale(1); }
+}
+.cat-emoji-inner.sad{ animation:catShake .45s ease; }
+@keyframes catShake{
+  0%,100%{ transform:rotate(0); }
+  25%{ transform:rotate(-10deg); }
+  75%{ transform:rotate(10deg); }
+}
+
+/* ======================= TEMPORIZADOR ======================= */
+.timer-wrap{ max-width:520px; margin:0 auto 14px; }
+.timer-bar-outer{ height:8px; border-radius:6px; background:var(--color-bone-soft); overflow:hidden; }
+.timer-bar-fill{ height:100%; background:var(--color-red); width:100%; }
+.timer-label{ text-align:center; font-size:.72rem; color:var(--color-ink-soft); margin-top:4px; font-weight:500; }
+
+/* ======================= TARJETA DE PREGUNTA ======================= */
+.verb-card{
+  background:var(--color-paper); border:1px solid var(--color-bone-soft); border-radius:var(--radius-l);
+  padding:22px 24px; text-align:center; margin-bottom:18px;
+}
+.verb-kanji{ font-family:var(--font-display); font-size:2.1rem; font-weight:800; color:var(--color-ink); }
+.verb-hira{ font-size:.9rem; color:var(--color-ink-soft); margin-top:2px; }
+.verb-meaning{ font-family:var(--font-display); font-size:1.05rem; font-weight:800; color:var(--color-green); margin-top:8px; }
+.verb-question{
+  margin-top:14px; font-size:.9rem; color:var(--color-ink); font-weight:700;
+  background:var(--color-bone); border-radius:999px; padding:8px 18px; display:inline-block;
+}
+
+.options-grid{ display:grid; grid-template-columns:1fr; gap:12px; max-width:520px; margin:0 auto; }
+@media (min-width:600px){ .options-grid{ grid-template-columns:1fr 1fr 1fr; } }
+.option-btn{
+  background:var(--color-bone); border:2px solid var(--color-bone-soft); border-radius:var(--radius-m);
+  padding:14px 8px; cursor:pointer; font-family:var(--font-body); font-size:1.05rem; font-weight:800;
+  color:var(--color-ink); transition:transform .15s ease, border-color .15s ease, background .15s ease, color .15s ease;
+}
+.option-btn:hover:not(:disabled){ transform:translateY(-2px); border-color:var(--color-green-soft); }
+.option-btn:disabled{ cursor:default; }
+.option-btn .opt-hira{ display:block; font-size:.72rem; font-weight:500; color:var(--color-ink-soft); margin-top:3px; }
+.option-btn.correct{ background:var(--color-correct); border-color:var(--color-correct); color:var(--color-paper); }
+.option-btn.correct .opt-hira{ color:rgba(255,255,255,.85); }
+.option-btn.wrong{ background:var(--color-wrong); border-color:var(--color-wrong); color:var(--color-paper); animation:shakeX .4s ease; }
+.option-btn.wrong .opt-hira{ color:rgba(255,255,255,.85); }
+
+.verb-feedback-msg{ text-align:center; min-height:1.4em; font-weight:700; margin-top:14px; font-size:.9rem; }
+.verb-feedback-msg.correct{ color:var(--color-correct); }
+.verb-feedback-msg.wrong{ color:var(--color-wrong); }
+
+.session-tag{ text-align:center; font-size:.72rem; color:var(--color-ink-soft); margin-bottom:10px; }
+.session-tag b{ color:var(--color-green); }
+
+/* ---------- Pantalla de finalización ---------- */
+.done-screen{ text-align:center; padding:26px 10px; }
+.done-screen .emoji{ font-size:3rem; margin-bottom:10px; }
+.done-screen h2{ font-family:var(--font-display); font-weight:800; color:var(--color-green); margin:0 0 6px; }
+.done-screen p{ color:var(--color-ink-soft); margin:0 0 20px; }
+.done-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+footer.note{ text-align:center; color:var(--color-ink-soft); font-size:.72rem; margin-top:26px; line-height:1.6; font-weight:500; }
+
+@media (max-width:480px){
+  .brand h1{ font-size:1.2rem; }
+  .panel{ padding:20px 16px; }
+  .verb-kanji{ font-size:1.7rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <h1>猫の橋</h1>
+      <small>Verbos Marugoto A2-1 · tiempos verbales</small>
+    </div>
+    <div class="scoreboard">
+      <div class="hanko">得点</div>
+      <div class="score-item"><div class="num" id="sc-points">0</div><div class="lbl">Puntos</div></div>
+      <div class="score-divider"></div>
+      <div class="score-item"><div class="num" id="sc-streak">0</div><div class="lbl">Racha</div></div>
+      <div class="score-divider"></div>
+      <div class="score-item"><div class="num" id="sc-accuracy">—</div><div class="lbl">Precisión</div></div>
+      <button class="reset-btn" onclick="resetScore()" title="Reiniciar puntuación">↺</button>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA: MENÚ ===================== -->
+  <div id="screen-menu" class="panel">
+    <div class="cat-hero">🐱</div>
+    <p class="section-title" style="text-align:center;">El puente del gato</p>
+    <p class="section-sub" style="text-align:center;">Ayuda al gato a cruzar el puente conjugando verbos japoneses (N5–N4).</p>
+
+    <div class="intro-card">
+      <p>
+        En cada piedra del puente aparecerá un verbo en su forma de diccionario junto a su significado en español,
+        y se te pedirá una forma concreta. Las tres opciones de respuesta son <b>variaciones del mismo verbo</b> en
+        distintos tiempos, así que tendrás que fijarte bien. Si aciertas, el gato salta a la siguiente piedra;
+        si fallas o se acaba el tiempo, verás la respuesta correcta y lo volverás a intentar.
+      </p>
+    </div>
+
+    <div class="filter-section">
+      <h3>Nivel de los verbos (JLPT)</h3>
+      <p class="filter-sub">Elige qué niveles quieres practicar. Puedes combinar varios a la vez — el juego mezclará verbos de todos los niveles que actives.</p>
+      <div class="chip-row" id="level-toggles"></div>
+      <div class="selection-warning" id="level-warning"></div>
+    </div>
+
+    <div class="filter-section">
+      <h3>Combina las formas que quieres practicar</h3>
+      <p class="filter-sub">
+        Elige un registro (ます形 o 普通形) y, si quieres, añade matices — negativo, pasado, potencial o pasivo —
+        y se combinarán con TODO lo que actives, incluyendo て形, ば形 y たら形. Por ejemplo, si activas
+        <b>ば形</b> + <b>Forma negativa</b> + <b>Forma potencial</b>, te podrán preguntar cosas como
+        «¿Cuál es la forma condicional -eba potencial negativa de este verbo?» (食べられなければ). Necesitas al menos
+        3 combinaciones posibles para poder empezar.
+      </p>
+      <div class="filter-grid" id="filter-grid"></div>
+      <div class="selection-warning" id="selection-warning"></div>
+    </div>
+
+    <div class="menu-actions">
+      <button class="pill-btn primary" id="start-btn" onclick="startGame()">🐾 Empezar a cruzar el puente</button>
+    </div>
+  </div>
+
+  <!-- ===================== PANTALLA: JUEGO ===================== -->
+  <div id="screen-game" class="panel" style="display:none;">
+    <button class="back-btn" onclick="goToMenu()">← Volver al menú</button>
+    <p class="section-title">Cruza el puente</p>
+    <p class="bridge-progress-label" id="bridge-progress-label">Piedra 0 / 10</p>
+
+    <div class="bridge-scene">
+      <div class="bridge-track" id="bridge-track">
+        <div class="bridge-rail"></div>
+      </div>
+      <div class="river">
+        <span class="river-emoji" style="left:6%;">〜</span>
+        <span class="river-emoji" style="left:22%;">〜</span>
+        <span class="river-emoji" style="left:38%;">〜</span>
+        <span class="river-emoji" style="left:54%;">〜</span>
+        <span class="river-emoji" style="left:70%;">〜</span>
+        <span class="river-emoji" style="left:86%;">〜</span>
+      </div>
+    </div>
+
+    <div class="timer-wrap" id="timer-wrap">
+      <div class="timer-bar-outer"><div class="timer-bar-fill" id="timer-fill"></div></div>
+      <div class="timer-label" id="timer-label"></div>
+    </div>
+
+    <div class="verb-card">
+      <div class="verb-kanji" id="verb-kanji"></div>
+      <div class="verb-hira" id="verb-hira"></div>
+      <div class="verb-meaning" id="verb-meaning"></div>
+      <div class="verb-question" id="verb-question"></div>
+    </div>
+
+    <div class="options-grid" id="options-grid"></div>
+    <div class="verb-feedback-msg" id="verb-feedback-msg"></div>
+  </div>
+
+  <!-- ===================== PANTALLA: FINAL ===================== -->
+  <div id="screen-done" class="panel" style="display:none;">
+    <div class="done-screen">
+      <div class="emoji">🐾🎉</div>
+      <h2>¡El gato cruzó el puente!</h2>
+      <p id="done-text"></p>
+      <div class="done-actions">
+        <button class="pill-btn secondary" onclick="goToMenu()">Volver al menú</button>
+        <button class="pill-btn primary" onclick="startGame()">Cruzar de nuevo</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="note">
+    まるごと 初級1 A2 りかい — juego de estudio no oficial hecho para practicar la conjugación de verbos japoneses.<br>
+    Puedes editar la paleta de colores, los verbos y las opciones de dificultad directamente en el código HTML.
+  </footer>
+</div>
+
+<div class="hint-toast" id="hint-toast"></div>
+
+<script>
+/* ======================================================================
+   MOTOR DE CONJUGACIÓN — cómo añadir verbos nuevos
+   ======================================================================
+   Cada verbo se declara con SOLO 4 datos: kanji, lectura, grupo gramatical
+   y significado. El motor de conjugación (más abajo) calcula automáticamente
+   todas las formas (ます, て, ない, ば, たら, potencial, pasivo, y de ahí
+   todas las combinaciones de registro/negativo/pasado). Así no hay que
+   escribir — ni arriesgarse a teclear mal — cada conjugación a mano.
+
+   Cada entrada tiene esta forma:
+     { k:"漢字", h:"lectura en hiragana", g:"grupo", m:"significado en español" }
+
+   "g" (grupo) debe ser uno de estos valores exactos:
+     "ichidan"        verbos る con raíz en い／え (見る, 食べる, 起きる...)
+     "godan-u"        ...う  (買う, 会う, 洗う...)
+     "godan-tsu"      ...つ  (待つ, 立つ, 持つ...)
+     "godan-ru"       ...る con conjugación godan, NO ichidan (帰る, 知る, 走る,
+                      分かる... — ojo: muchos verbos "godan-ru" terminan en
+                      る igual que los ichidan; si tienes dudas, busca su
+                      forma -て: si es "〜って" es godan-ru, si es "〜て" es ichidan)
+     "godan-ku"       ...く  (書く, 聞く, 働く...)
+     "godan-ku-iku"   ...く con excepción en la forma て ("って" en vez de
+                      "いて") — hoy en día solo 行く la usa
+     "godan-gu"       ...ぐ  (泳ぐ, 脱ぐ...)
+     "godan-su"       ...す  (話す, 貸す, 出す...)
+     "godan-nu"       ...ぬ  (死ぬ — el único verbo común de este grupo)
+     "godan-bu"       ...ぶ  (遊ぶ, 呼ぶ...)
+     "godan-mu"       ...む  (読む, 飲む, 休む...)
+     "irregular-suru" cualquier verbo que termine en する: sirve tanto para
+                      する solo como para compuestos (勉強する, 質問する,
+                      練習する...) — no hace falta una entrada especial
+                      por cada uno, basta con declararlo con este grupo
+     "irregular-kuru" reservado para 来る (ya está incluido más abajo;
+                      no debería hacer falta añadir otro)
+
+   Para añadir un verbo nuevo: busca su nivel (N5 / N4 / N3) en las listas
+   de abajo y agrega una línea siguiendo el mismo formato. No hace falta
+   tocar nada del motor de conjugación ni del resto del código.
+   ====================================================================== */
+
+const VERBS_N5 = [
+  { k:"話す",  h:"はなす",   g:"godan-su",  m:"hablar" },
+  { k:"書く",  h:"かく",     g:"godan-ku",  m:"escribir" },
+  { k:"読む",  h:"よむ",     g:"godan-mu",  m:"leer" },
+  { k:"聞く",  h:"きく",     g:"godan-ku",  m:"escuchar / preguntar" },
+  { k:"見る",  h:"みる",     g:"ichidan",   m:"ver" },
+  { k:"食べる",h:"たべる",   g:"ichidan",   m:"comer" },
+  { k:"飲む",  h:"のむ",     g:"godan-mu",  m:"beber" },
+  { k:"行く",  h:"いく",     g:"godan-ku-iku", m:"ir" },
+  { k:"来る",  h:"くる",     g:"irregular-kuru", m:"venir" },
+  { k:"する",  h:"する",     g:"irregular-suru", m:"hacer" },
+  { k:"買う",  h:"かう",     g:"godan-u",   m:"comprar" },
+  { k:"待つ",  h:"まつ",     g:"godan-tsu", m:"esperar" },
+  { k:"帰る",  h:"かえる",   g:"godan-ru",  m:"volver / regresar" },
+  { k:"分かる",h:"わかる",   g:"godan-ru",  m:"entender" },
+  { k:"作る",  h:"つくる",   g:"godan-ru",  m:"hacer / crear" },
+  { k:"会う",  h:"あう",     g:"godan-u",   m:"encontrarse (con alguien)" },
+  { k:"立つ",  h:"たつ",     g:"godan-tsu", m:"ponerse de pie" },
+  { k:"座る",  h:"すわる",   g:"godan-ru",  m:"sentarse" },
+  { k:"泳ぐ",  h:"およぐ",   g:"godan-gu",  m:"nadar" },
+  { k:"死ぬ",  h:"しぬ",     g:"godan-nu",  m:"morir" },
+  { k:"遊ぶ",  h:"あそぶ",   g:"godan-bu",  m:"jugar" },
+  { k:"走る",  h:"はしる",   g:"godan-ru",  m:"correr" },
+  { k:"起きる",h:"おきる",   g:"ichidan",   m:"levantarse" },
+  { k:"寝る",  h:"ねる",     g:"ichidan",   m:"dormir" },
+  { k:"出る",  h:"でる",     g:"ichidan",   m:"salir" },
+  { k:"入る",  h:"はいる",   g:"godan-ru",  m:"entrar" },
+  { k:"持つ",  h:"もつ",     g:"godan-tsu", m:"llevar / sostener" },
+  { k:"洗う",  h:"あらう",   g:"godan-u",   m:"lavar" },
+  { k:"使う",  h:"つかう",   g:"godan-u",   m:"usar" },
+  { k:"教える",h:"おしえる", g:"ichidan",   m:"enseñar" },
+  { k:"習う",  h:"ならう",   g:"godan-u",   m:"aprender" },
+  { k:"働く",  h:"はたらく", g:"godan-ku",  m:"trabajar" },
+  { k:"休む",  h:"やすむ",   g:"godan-mu",  m:"descansar" },
+  { k:"歩く",  h:"あるく",   g:"godan-ku",  m:"caminar" },
+  { k:"送る",  h:"おくる",   g:"godan-ru",  m:"enviar" },
+  { k:"撮る",  h:"とる",     g:"godan-ru",  m:"tomar (una foto)" },
+  { k:"乗る",  h:"のる",     g:"godan-ru",  m:"subir(se a un vehículo)" },
+  { k:"降りる",h:"おりる",   g:"ichidan",   m:"bajar(se de un vehículo)" },
+  { k:"知る",  h:"しる",     g:"godan-ru",  m:"saber / conocer" }
+  // 👆 añade aquí más verbos N5 siguiendo el mismo formato
+];
+
+const VERBS_N4 = [
+  { k:"開ける",h:"あける",   g:"ichidan",   m:"abrir (algo)" },
+  { k:"閉める",h:"しめる",   g:"ichidan",   m:"cerrar (algo)" },
+  { k:"開く",  h:"あく",     g:"godan-ku",  m:"abrirse" },
+  { k:"閉まる",h:"しまる",   g:"godan-ru",  m:"cerrarse" },
+  { k:"始まる",h:"はじまる", g:"godan-ru",  m:"empezar (intransitivo)" },
+  { k:"始める",h:"はじめる", g:"ichidan",   m:"empezar (algo)" },
+  { k:"終わる",h:"おわる",   g:"godan-ru",  m:"terminar" },
+  { k:"続ける",h:"つづける", g:"ichidan",   m:"continuar (algo)" },
+  { k:"続く",  h:"つづく",   g:"godan-ku",  m:"continuar (intransitivo)" },
+  { k:"変える",h:"かえる",   g:"ichidan",   m:"cambiar (algo)" },
+  { k:"変わる",h:"かわる",   g:"godan-ru",  m:"cambiar (intransitivo)" },
+  { k:"決める",h:"きめる",   g:"ichidan",   m:"decidir" },
+  { k:"決まる",h:"きまる",   g:"godan-ru",  m:"quedar decidido" },
+  { k:"見つける",h:"みつける",g:"ichidan",  m:"encontrar" },
+  { k:"見つかる",h:"みつかる",g:"godan-ru", m:"ser encontrado / aparecer" },
+  { k:"忘れる",h:"わすれる", g:"ichidan",   m:"olvidar" },
+  { k:"覚える",h:"おぼえる", g:"ichidan",   m:"memorizar / recordar" },
+  { k:"出す",  h:"だす",     g:"godan-su",  m:"sacar" },
+  { k:"入れる",h:"いれる",   g:"ichidan",   m:"meter / introducir" },
+  { k:"出かける",h:"でかける",g:"ichidan",  m:"salir (de casa)" },
+  { k:"着る",  h:"きる",     g:"ichidan",   m:"ponerse (ropa)" },
+  { k:"脱ぐ",  h:"ぬぐ",     g:"godan-gu",  m:"quitarse (ropa)" },
+  { k:"履く",  h:"はく",     g:"godan-ku",  m:"calzarse" },
+  { k:"かぶる",h:"かぶる",   g:"godan-ru",  m:"ponerse (un sombrero)" },
+  { k:"貸す",  h:"かす",     g:"godan-su",  m:"prestar" },
+  { k:"借りる",h:"かりる",   g:"ichidan",   m:"pedir prestado" },
+  { k:"返す",  h:"かえす",   g:"godan-su",  m:"devolver" },
+  { k:"払う",  h:"はらう",   g:"godan-u",   m:"pagar" },
+  { k:"呼ぶ",  h:"よぶ",     g:"godan-bu",  m:"llamar" },
+  { k:"誘う",  h:"さそう",   g:"godan-u",   m:"invitar" },
+  { k:"迎える",h:"むかえる", g:"ichidan",   m:"recibir / ir a buscar" },
+  { k:"届ける",h:"とどける", g:"ichidan",   m:"entregar" },
+  { k:"届く",  h:"とどく",   g:"godan-ku",  m:"llegar (algo enviado)" },
+  { k:"渡す",  h:"わたす",   g:"godan-su",  m:"entregar / pasar" },
+  { k:"渡る",  h:"わたる",   g:"godan-ru",  m:"cruzar" },
+  { k:"通る",  h:"とおる",   g:"godan-ru",  m:"pasar por" },
+  { k:"通う",  h:"かよう",   g:"godan-u",   m:"asistir regularmente" },
+  { k:"泊まる",h:"とまる",   g:"godan-ru",  m:"hospedarse" }
+  // 👆 añade aquí más verbos N4 siguiendo el mismo formato
+];
+
+const VERBS_N3 = [
+  { k:"感じる",h:"かんじる", g:"ichidan",   m:"sentir" },
+  { k:"信じる",h:"しんじる", g:"ichidan",   m:"creer / confiar" },
+  { k:"比べる",h:"くらべる", g:"ichidan",   m:"comparar" },
+  { k:"支える",h:"ささえる", g:"ichidan",   m:"apoyar / sostener" },
+  { k:"抱える",h:"かかえる", g:"ichidan",   m:"cargar (un problema)" },
+  { k:"慣れる",h:"なれる",   g:"ichidan",   m:"acostumbrarse" },
+  { k:"濡れる",h:"ぬれる",   g:"ichidan",   m:"mojarse" },
+  { k:"壊れる",h:"こわれる", g:"ichidan",   m:"romperse" },
+  { k:"壊す",  h:"こわす",   g:"godan-su",  m:"romper" },
+  { k:"直す",  h:"なおす",   g:"godan-su",  m:"reparar / corregir" },
+  { k:"直る",  h:"なおる",   g:"godan-ru",  m:"repararse / corregirse" },
+  { k:"治る",  h:"なおる",   g:"godan-ru",  m:"curarse / sanar" },
+  { k:"治す",  h:"なおす",   g:"godan-su",  m:"curar" },
+  { k:"生きる",h:"いきる",   g:"ichidan",   m:"vivir" },
+  { k:"争う",  h:"あらそう", g:"godan-u",   m:"pelear / disputar" },
+  { k:"戦う",  h:"たたかう", g:"godan-u",   m:"luchar" },
+  { k:"支払う",h:"しはらう", g:"godan-u",   m:"pagar (formalmente)" },
+  { k:"得る",  h:"える",     g:"ichidan",   m:"obtener" },
+  { k:"失う",  h:"うしなう", g:"godan-u",   m:"perder" },
+  { k:"済む",  h:"すむ",     g:"godan-mu",  m:"terminarse / resolverse" },
+  { k:"進む",  h:"すすむ",   g:"godan-mu",  m:"avanzar" },
+  { k:"進める",h:"すすめる", g:"ichidan",   m:"avanzar (algo) / promover" },
+  { k:"冷える",h:"ひえる",   g:"ichidan",   m:"enfriarse" },
+  { k:"冷やす",h:"ひやす",   g:"godan-su",  m:"enfriar" },
+  { k:"温める",h:"あたためる",g:"ichidan",  m:"calentar" },
+  { k:"温まる",h:"あたたまる",g:"godan-ru", m:"calentarse" },
+  { k:"囲む",  h:"かこむ",   g:"godan-mu",  m:"rodear" },
+  { k:"従う",  h:"したがう", g:"godan-u",   m:"obedecer / seguir" },
+  { k:"望む",  h:"のぞむ",   g:"godan-mu",  m:"desear / esperar" },
+  { k:"悩む",  h:"なやむ",   g:"godan-mu",  m:"preocuparse / angustiarse" },
+  { k:"疑う",  h:"うたがう", g:"godan-u",   m:"dudar / sospechar" },
+  { k:"諦める",h:"あきらめる",g:"ichidan",  m:"rendirse / renunciar" },
+  { k:"断る",  h:"ことわる", g:"godan-ru",  m:"rechazar / negarse" },
+  { k:"認める",h:"みとめる", g:"ichidan",   m:"reconocer / admitir" },
+  { k:"求める",h:"もとめる", g:"ichidan",   m:"pedir / buscar (algo abstracto)" },
+  { k:"減る",  h:"へる",     g:"godan-ru",  m:"disminuir" }
+  // 👆 añade aquí más verbos N3 siguiendo el mismo formato
+];
+
+// No hace falta tocar esto: junta las tres listas y les asigna su nivel.
+const VERB_SOURCE = [
+  ...VERBS_N5.map(v=>({ ...v, lvl:"N5" })),
+  ...VERBS_N4.map(v=>({ ...v, lvl:"N4" })),
+  ...VERBS_N3.map(v=>({ ...v, lvl:"N3" }))
+];
+
+/* ---------- Reglas de conjugación por grupo (godan/ichidan/irregular) ----------
+   Dado (kanji, hiragana, grupo) se derivan automáticamente: forma de
+   diccionario, ます, て, ない, ば (condicional), y las formas de
+   diccionario del potencial y del pasivo — igual que se haría a mano,
+   pero sin riesgo de errores de tecleo al escalar la lista de verbos. */
+const GODAN_RULES = {
+  "godan-u":      { masuRow:"い", te:"って", naiRow:"わ", potRow:"え", passRow:"わ" },
+  "godan-tsu":    { masuRow:"ち", te:"って", naiRow:"た", potRow:"て", passRow:"た" },
+  "godan-ru":     { masuRow:"り", te:"って", naiRow:"ら", potRow:"れ", passRow:"ら" },
+  "godan-ku":     { masuRow:"き", te:"いて", naiRow:"か", potRow:"け", passRow:"か" },
+  "godan-ku-iku": { masuRow:"き", te:"って", naiRow:"か", potRow:"け", passRow:"か" }, // 行く: excepción sólo en て
+  "godan-gu":     { masuRow:"ぎ", te:"いで", naiRow:"が", potRow:"げ", passRow:"が" },
+  "godan-su":     { masuRow:"し", te:"して", naiRow:"さ", potRow:"せ", passRow:"さ" },
+  "godan-nu":     { masuRow:"に", te:"んで", naiRow:"な", potRow:"ね", passRow:"な" },
+  "godan-bu":     { masuRow:"び", te:"んで", naiRow:"ば", potRow:"べ", passRow:"ば" },
+  "godan-mu":     { masuRow:"み", te:"んで", naiRow:"ま", potRow:"め", passRow:"ま" }
+};
+
+// La forma たら siempre es "forma た + ら", así que se calcula reutilizando
+// la misma regla て→た que usa el paradigma base más abajo.
+function deriveTa(teText){
+  if(teText.endsWith("て")) return teText.slice(0,-1) + "た";
+  if(teText.endsWith("で")) return teText.slice(0,-1) + "だ";
+  return teText;
+}
+
+function conjugateVerb(kanji, kana, group){
+  if(group === "ichidan"){
+    const ks = kanji.slice(0,-1), hs = kana.slice(0,-1);
+    return {
+      jisho:kanji, jishoHira:kana,
+      masu:ks+"ます", masuHira:hs+"ます",
+      te:ks+"て", teHira:hs+"て",
+      nai:ks+"ない", naiHira:hs+"ない",
+      ba:ks+"れば", baHira:hs+"れば",
+      potential:ks+"られる", potentialHira:hs+"られる",
+      passive:ks+"られる", passiveHira:hs+"られる"
+    };
+  }
+  if(group === "irregular-suru"){
+    const ks = kanji.slice(0,-2), hs = kana.slice(0,-2); // quita "する"
+    return {
+      jisho:kanji, jishoHira:kana,
+      masu:ks+"します", masuHira:hs+"します",
+      te:ks+"して", teHira:hs+"して",
+      nai:ks+"しない", naiHira:hs+"しない",
+      ba:ks+"すれば", baHira:hs+"すれば",
+      potential:ks+"できる", potentialHira:hs+"できる",
+      passive:ks+"される", passiveHira:hs+"される"
+    };
+  }
+  if(group === "irregular-kuru"){
+    return {
+      jisho:"来る", jishoHira:"くる",
+      masu:"来ます", masuHira:"きます",
+      te:"来て", teHira:"きて",
+      nai:"来ない", naiHira:"こない",
+      ba:"来れば", baHira:"くれば",
+      potential:"来られる", potentialHira:"こられる",
+      passive:"来られる", passiveHira:"こられる"
+    };
+  }
+  const rule = GODAN_RULES[group];
+  const ks = kanji.slice(0,-1), hs = kana.slice(0,-1); // quita la última kana en fila -u
+  return {
+    jisho:kanji, jishoHira:kana,
+    masu:ks+rule.masuRow+"ます", masuHira:hs+rule.masuRow+"ます",
+    te:ks+rule.te, teHira:hs+rule.te,
+    nai:ks+rule.naiRow+"ない", naiHira:hs+rule.naiRow+"ない",
+    ba:ks+rule.potRow+"ば", baHira:hs+rule.potRow+"ば",
+    potential:ks+rule.potRow+"る", potentialHira:hs+rule.potRow+"る",
+    passive:ks+rule.passRow+"れる", passiveHira:hs+rule.passRow+"れる"
+  };
+}
+
+const VERBS = VERB_SOURCE.map(v=>{
+  const conj = conjugateVerb(v.k, v.h, v.g);
+  return { ...conj, meaning:v.m, level:v.lvl };
+});
+
+const LEVELS = ["N5","N4","N3"];
+let selectedLevels = new Set(LEVELS);
+
+/* ======================================================================
+   PARADIGMAS DERIVADOS — a partir de los datos base de cada verbo se
+   generan automáticamente TODAS las combinaciones de registro (ます／
+   普通) × matiz (afirmativo／negativo × no-pasado／pasado) para tres
+   "funciones" del verbo: la base, el potencial (可能形) y el pasivo
+   (受身形). El potencial y el pasivo siempre terminan en る, así que
+   una vez calculada su forma de diccionario se conjugan exactamente
+   igual que un verbo ichidan (見る, 食べる...), lo que permite reusar
+   la misma función de conjugación para las tres.
+
+   Además de las 8 combinaciones "principales" (ます／普通 × afirmativo／
+   negativo × no-pasado／pasado), cada paradigma también incluye て／ば
+   en afirmativo y negativo (て・なくて／ば・なければ), para que
+   negativo/potencial/pasivo se puedan combinar con ellas también. La
+   forma たら no necesita campos propios: siempre es "la forma pasada
+   (た／なかった／ました／ませんでした) + ら", así que se calcula al
+   vuelo a partir de estos mismos paradigmas.
+   ====================================================================== */
+
+// Conjuga cualquier "forma de diccionario" que termine en る (base ichidan,
+// o las formas de diccionario del potencial/pasivo) en todas sus variantes.
+function buildIchidanParadigm(dictText, dictHira){
+  const stem = dictText.slice(0,-1);
+  const stemHira = dictHira.slice(0,-1);
+  return {
+    jisho:dictText,            jishoHira:stemHira+"る",
+    nai:stem+"ない",           naiHira:stemHira+"ない",
+    masu:stem+"ます",          masuHira:stemHira+"ます",
+    masen:stem+"ません",       masenHira:stemHira+"ません",
+    ta:stem+"た",              taHira:stemHira+"た",
+    mashita:stem+"ました",     mashitaHira:stemHira+"ました",
+    nakatta:stem+"なかった",   nakattaHira:stemHira+"なかった",
+    masendeshita:stem+"ませんでした", masendeshitaHira:stemHira+"ませんでした",
+    te:stem+"て",              teHira:stemHira+"て",
+    teNeg:stem+"なくて",       teNegHira:stemHira+"なくて",
+    ba:stem+"れば",            baHira:stemHira+"れば",
+    baNeg:stem+"なければ",     baNegHira:stemHira+"なければ"
+  };
+}
+
+// La función base reutiliza los datos ya escritos a mano (jisho, nai, masu,
+// te) y deriva el resto con las mismas reglas mecánicas del japonés.
+function buildBaseParadigm(v){
+  const masen = v.masu.replace(/ます$/, "ません");
+  const masenHira = v.masuHira.replace(/ます$/, "ません");
+  const mashita = v.masu.replace(/ます$/, "ました");
+  const mashitaHira = v.masuHira.replace(/ます$/, "ました");
+  const naiStem = v.nai.slice(0,-2), naiStemHira = v.naiHira.slice(0,-2);
+  const nakatta = naiStem + "なかった", nakattaHira = naiStemHira + "なかった";
+  return {
+    jisho:v.jisho, jishoHira:v.jishoHira,
+    nai:v.nai,     naiHira:v.naiHira,
+    masu:v.masu,   masuHira:v.masuHira,
+    masen, masenHira,
+    ta:deriveTa(v.te), taHira:deriveTa(v.teHira),
+    mashita, mashitaHira,
+    nakatta, nakattaHira,
+    masendeshita: masen+"でした", masendeshitaHira: masenHira+"でした",
+    te:v.te, teHira:v.teHira,
+    teNeg: naiStem+"なくて", teNegHira: naiStemHira+"なくて",
+    ba:v.ba, baHira:v.baHira,
+    baNeg: naiStem+"なければ", baNegHira: naiStemHira+"なければ"
+  };
+}
+
+VERBS.forEach(v=>{
+  v.paradigms = {
+    base:      buildBaseParadigm(v),
+    potential: buildIchidanParadigm(v.potential, v.potentialHira),
+    passive:   buildIchidanParadigm(v.passive, v.passiveHira)
+  };
+});
+
+// Traduce (registro, polaridad, tiempo) al par de campos del paradigma.
+const FORM_FIELD_MAP = {
+  "plain|affirmative|nonpast":  ["jisho","jishoHira"],
+  "plain|negative|nonpast":     ["nai","naiHira"],
+  "plain|affirmative|past":     ["ta","taHira"],
+  "plain|negative|past":        ["nakatta","nakattaHira"],
+  "formal|affirmative|nonpast": ["masu","masuHira"],
+  "formal|negative|nonpast":    ["masen","masenHira"],
+  "formal|affirmative|past":    ["mashita","mashitaHira"],
+  "formal|negative|past":       ["masendeshita","masendeshitaHira"]
+};
+
+// Formas "sueltas" que no se combinan con registro/negativo/pasado: cada
+// una se calcula directamente sobre el verbo base y se activa con su
+// て／ば son "afirmativo・negativo × función", pero SIN registro ni tiempo
+// propio (て y ば no distinguen cortés/plano ni pasado). たら SÍ usa
+// registro, porque se construye sobre la forma pasada (た／ました), pero
+// su "tiempo" está siempre fijo en pasado, así que no depende de la
+// casilla de pasado del resto de formas.
+function getVariantText(verb, variant){
+  const paradigm = verb.paradigms[variant.function];
+  if(variant.type === "te"){
+    return variant.polarity === "negative"
+      ? { text:paradigm.teNeg, hira:paradigm.teNegHira }
+      : { text:paradigm.te, hira:paradigm.teHira };
+  }
+  if(variant.type === "ba"){
+    return variant.polarity === "negative"
+      ? { text:paradigm.baNeg, hira:paradigm.baNegHira }
+      : { text:paradigm.ba, hira:paradigm.baHira };
+  }
+  if(variant.type === "tara"){
+    const [tKey, hKey] = FORM_FIELD_MAP[`${variant.register}|${variant.polarity}|past`];
+    return { text:paradigm[tKey]+"ら", hira:paradigm[hKey]+"ら" };
+  }
+  // "main": las 8 combinaciones de registro × polaridad × tiempo
+  const [tKey, hKey] = FORM_FIELD_MAP[`${variant.register}|${variant.polarity}|${variant.tense}`];
+  return { text:paradigm[tKey], hira:paradigm[hKey] };
+}
+
+function getVariantLabel(variant){
+  const parts = [];
+  if(variant.type === "te") parts.push("-te");
+  if(variant.type === "ba") parts.push("condicional -eba");
+  if(variant.type === "tara") parts.push("condicional -tara");
+  if(variant.type === "main" || variant.type === "tara"){
+    parts.push(variant.register === "formal" ? "cortés" : "plana");
+  }
+  if(variant.function === "potential") parts.push("potencial");
+  if(variant.function === "passive") parts.push("pasiva");
+  if(variant.polarity === "negative") parts.push("negativa");
+  if(variant.type === "main" && variant.tense === "past") parts.push("pasada");
+  return parts.join(" ");
+}
+
+/* ---------- Casillas combinables del menú ---------- */
+let toggles = {
+  registerFormal: true,
+  registerPlain:  true,
+  te:             true,
+  ba:             false,
+  tara:           false,
+  negative:       false,
+  past:           false,
+  potential:      false,
+  passive:        false
+};
+
+// A partir de las casillas activas, genera TODAS las combinaciones
+// posibles. Negativo/pasado/potencial/pasivo se cruzan con cada familia
+// de formas que esté activa (principal, て, ば, たら) — así, si activas
+// "negativo" + "potencial" + "ば", te pueden preguntar cosas como
+// "¿Cuál es la forma condicional -eba potencial negativa de este verbo?"
+// (食べられなければ).
+function getEnabledVariants(){
+  const variants = [];
+
+  const functionPool = ["base"];
+  if(toggles.potential) functionPool.push("potential");
+  if(toggles.passive) functionPool.push("passive");
+
+  const registerPool = [];
+  if(toggles.registerFormal) registerPool.push("formal");
+  if(toggles.registerPlain) registerPool.push("plain");
+
+  const polarityPool = ["affirmative"];
+  if(toggles.negative) polarityPool.push("negative");
+
+  const tensePool = ["nonpast"];
+  if(toggles.past) tensePool.push("past");
+
+  // Familia principal (ます／普通 × afirmativo／negativo × no-pasado／pasado)
+  functionPool.forEach(fn=>{
+    registerPool.forEach(reg=>{
+      polarityPool.forEach(pol=>{
+        tensePool.forEach(tns=>{
+          variants.push({ type:"main", function:fn, register:reg, polarity:pol, tense:tns });
+        });
+      });
+    });
+  });
+
+  // て (sin registro, sin tiempo)
+  if(toggles.te){
+    functionPool.forEach(fn=>{
+      polarityPool.forEach(pol=>{
+        variants.push({ type:"te", function:fn, polarity:pol });
+      });
+    });
+  }
+
+  // ば (sin registro, sin tiempo)
+  if(toggles.ba){
+    functionPool.forEach(fn=>{
+      polarityPool.forEach(pol=>{
+        variants.push({ type:"ba", function:fn, polarity:pol });
+      });
+    });
+  }
+
+  // たら (con registro; el tiempo está siempre fijo en "pasado")
+  if(toggles.tara){
+    functionPool.forEach(fn=>{
+      registerPool.forEach(reg=>{
+        polarityPool.forEach(pol=>{
+          variants.push({ type:"tara", function:fn, register:reg, polarity:pol });
+        });
+      });
+    });
+  }
+
+  return variants;
+}
+
+/* ---------- Niveles de dificultad: tiempo disponible por pregunta ---------- */
+const DIFFICULTIES = [
+  { key:"relaxed", label:"🐢 Fácil",   sub:"20 s",       ms:20000 },
+  { key:"normal",  label:"🚶 Normal",  sub:"12 s",       ms:12000 },
+  { key:"hard",    label:"🐇 Difícil", sub:"7 s",        ms:7000  },
+  { key:"extreme", label:"🔥 Extremo", sub:"4 s",        ms:4000  },
+  { key:"none",    label:"♾️ Sin límite", sub:"sin tiempo", ms:null }
+];
+
+/* ====================================================================== */
+
+let points = 0, streak = 0, correctCount = 0, wrongCount = 0;
+const TOTAL_STEPS = 10;
+let currentStep = 0;
+let currentQuestion = null;
+let answered = false;
+let gameActive = false;
+let lastVerbIndex = null;
+
+let selectedDifficultyKey = "normal";
+let timerTimeoutHandle = null;
+
+/* ---------- Sonido (Web Audio API, sin archivos externos) ---------- */
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(AC) audioCtx = new AC();
+  }
+  return audioCtx;
+}
+function playTone(freqStart, freqEnd, duration, type, volume){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(freqEnd,1), ctx.currentTime + duration);
+  gain.gain.setValueAtTime(volume, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + duration);
+}
+function playCorrectSound(){
+  playTone(523.25, 784, 0.16, 'triangle', 0.18);
+  setTimeout(()=>playTone(659.25, 987.77, 0.14, 'triangle', 0.14), 90);
+}
+function playWrongSound(){
+  playTone(220, 120, 0.26, 'sawtooth', 0.13);
+}
+
+function updateScoreboard(){
+  document.getElementById('sc-points').textContent = points;
+  document.getElementById('sc-streak').textContent = streak;
+  const total = correctCount + wrongCount;
+  document.getElementById('sc-accuracy').textContent = total ? Math.round(correctCount/total*100)+'%' : '—';
+}
+
+function resetScore(){
+  if(!confirm('¿Reiniciar la puntuación, la racha y la precisión a cero?')) return;
+  points = 0; streak = 0; correctCount = 0; wrongCount = 0;
+  updateScoreboard();
+  showToast('Puntuación reiniciada ↺');
+}
+
+function pulsePoints(delta, x, y){
+  const el = document.createElement('div');
+  el.className = 'float-particle';
+  el.textContent = delta > 0 ? '+' + delta + ' ✨' : '💧';
+  el.style.left = (x||window.innerWidth/2) + 'px';
+  el.style.top = (y||window.innerHeight/2) + 'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1000);
+}
+
+function showToast(msg){
+  const t = document.getElementById('hint-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ---------- Navegación entre pantallas ---------- */
+function showScreen(name){
+  ['menu','game','done'].forEach(s=>{
+    document.getElementById('screen-'+s).style.display = (s===name) ? 'block' : 'none';
+  });
+}
+function goToMenu(){
+  gameActive = false;
+  clearTimeout(timerTimeoutHandle);
+  showScreen('menu');
+}
+
+/* ---------- Menú: nivel de los verbos (N5-N3) ---------- */
+function renderLevelToggles(){
+  const row = document.getElementById('level-toggles');
+  row.innerHTML = '';
+  LEVELS.forEach(lvl=>{
+    const count = VERBS.filter(v=>v.level===lvl).length;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'level-toggle' + (selectedLevels.has(lvl) ? ' active' : '');
+    btn.innerHTML = `${lvl}<span class="level-count">${count} verbos</span>`;
+    btn.onclick = ()=>{
+      if(selectedLevels.has(lvl)) selectedLevels.delete(lvl);
+      else selectedLevels.add(lvl);
+      renderLevelToggles();
+    };
+    row.appendChild(btn);
+  });
+  refreshLevelWarning();
+}
+
+function refreshLevelWarning(){
+  const warn = document.getElementById('level-warning');
+  if(!warn) return;
+  warn.textContent = selectedLevels.size === 0 ? 'Elige al menos un nivel (N5, N4 o N3).' : '';
+}
+
+/* ---------- Menú: panel de 4 columnas ---------- */
+function makeToggleBtn(key, label, sub){
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'form-toggle' + (toggles[key] ? ' active' : '');
+  btn.innerHTML = `${label}<span class="toggle-sub">${sub}</span>`;
+  btn.onclick = ()=>{ toggles[key] = !toggles[key]; renderFilterGrid(); };
+  return btn;
+}
+
+function renderFilterGrid(){
+  const grid = document.getElementById('filter-grid');
+  grid.innerHTML = '';
+
+  // Columna 1 — Registro (ます形 / 普通形)
+  const col1 = document.createElement('div');
+  col1.className = 'filter-col';
+  col1.innerHTML = '<div class="col-title">① Registro</div>';
+  col1.appendChild(makeToggleBtn('registerFormal', 'ます形', 'Registro cortés'));
+  col1.appendChild(makeToggleBtn('registerPlain', '普通形', 'Registro plano'));
+  grid.appendChild(col1);
+
+  // Columna 2 — formas compartidas: て形, ば形, たら形 (no se combinan
+  // con registro/negativo/pasado, se calculan directo sobre el verbo base)
+  const col2 = document.createElement('div');
+  col2.className = 'filter-col';
+  col2.innerHTML = '<div class="col-title">② Compartidas</div>';
+  col2.appendChild(makeToggleBtn('te', 'て形', 'Forma -te'));
+  col2.appendChild(makeToggleBtn('ba', 'ば形', 'Condicional -えば'));
+  col2.appendChild(makeToggleBtn('tara', 'たら形', 'Condicional -たら'));
+  grid.appendChild(col2);
+
+  // Columna 3 — matices combinables: negativo, pasado, potencial, pasivo
+  const col3 = document.createElement('div');
+  col3.className = 'filter-col';
+  col3.innerHTML = '<div class="col-title">③ Combínalas libremente</div>';
+  col3.appendChild(makeToggleBtn('negative', 'ない形／ません形', 'Forma negativa'));
+  col3.appendChild(makeToggleBtn('past', 'た形／ました形', 'Forma pasada'));
+  col3.appendChild(makeToggleBtn('potential', '可能形', 'Forma potencial'));
+  col3.appendChild(makeToggleBtn('passive', '受け身形', 'Forma pasiva'));
+  grid.appendChild(col3);
+
+  // Columna 4 — nivel de dificultad
+  const col4 = document.createElement('div');
+  col4.className = 'filter-col';
+  col4.innerHTML = '<div class="col-title">④ Dificultad</div>';
+  DIFFICULTIES.forEach(d=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'diff-btn-v' + (d.key===selectedDifficultyKey ? ' active' : '');
+    btn.innerHTML = `${d.label}<span class="diff-sub">${d.sub}</span>`;
+    btn.onclick = ()=>{ selectedDifficultyKey = d.key; renderFilterGrid(); };
+    col4.appendChild(btn);
+  });
+  grid.appendChild(col4);
+
+  refreshSelectionWarning();
+}
+
+function refreshSelectionWarning(){
+  const warn = document.getElementById('selection-warning');
+  const registerCount = (toggles.registerFormal?1:0) + (toggles.registerPlain?1:0);
+  const total = getEnabledVariants().length;
+  if(registerCount === 0){
+    warn.textContent = 'Selecciona al menos un registro: ます形 o 普通形.';
+  } else if(total < 3){
+    warn.textContent = `Necesitas al menos 3 combinaciones posibles para jugar (llevas ${total}).`;
+  } else {
+    warn.textContent = '';
+  }
+}
+
+function getSelectedDifficulty(){
+  return DIFFICULTIES.find(d=>d.key===selectedDifficultyKey) || DIFFICULTIES[1];
+}
+
+/* ---------- Construcción del puente ---------- */
+function buildBridge(){
+  const track = document.getElementById('bridge-track');
+  track.querySelectorAll('.stone, .cat-slot').forEach(el=>el.remove());
+  for(let i=0;i<=TOTAL_STEPS;i++){
+    const stone = document.createElement('div');
+    stone.className = 'stone';
+    stone.id = 'stone-'+i;
+    stone.style.left = (i/TOTAL_STEPS*96 + 2) + '%';
+    stone.textContent = (i===0) ? '🐾' : (i===TOTAL_STEPS ? '⛩️' : '');
+    track.appendChild(stone);
+  }
+  const catSlot = document.createElement('div');
+  catSlot.className = 'cat-slot';
+  catSlot.id = 'cat-slot';
+  catSlot.style.left = '2%';
+  catSlot.innerHTML = '<span class="cat-emoji-inner" id="cat-emoji-inner">🐱</span>';
+  track.appendChild(catSlot);
+  updateBridgeVisual();
+}
+
+function updateBridgeVisual(){
+  for(let i=0;i<=TOTAL_STEPS;i++){
+    const stone = document.getElementById('stone-'+i);
+    if(!stone) continue;
+    stone.classList.toggle('done', i < currentStep);
+    stone.classList.toggle('current', i === currentStep);
+  }
+  const catSlot = document.getElementById('cat-slot');
+  catSlot.style.left = (currentStep/TOTAL_STEPS*96 + 2) + '%';
+  document.getElementById('bridge-progress-label').textContent = `Piedra ${currentStep} / ${TOTAL_STEPS}`;
+}
+
+function catBounce(className){
+  const inner = document.getElementById('cat-emoji-inner');
+  inner.classList.remove('hop','sad');
+  void inner.offsetWidth;
+  inner.classList.add(className);
+  setTimeout(()=>inner.classList.remove(className), 650);
+}
+
+/* ---------- Temporizador ---------- */
+function startTimer(){
+  clearTimeout(timerTimeoutHandle);
+  const diff = getSelectedDifficulty();
+  const fill = document.getElementById('timer-fill');
+  const label = document.getElementById('timer-label');
+  if(diff.ms === null){
+    fill.style.transition = 'none';
+    fill.style.width = '100%';
+    fill.style.background = 'var(--color-green-soft)';
+    label.textContent = 'Sin límite de tiempo ♾️';
+    return;
+  }
+  fill.style.background = 'var(--color-red)';
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  void fill.offsetWidth; // forzar reflow
+  fill.style.transition = `width ${diff.ms}ms linear`;
+  requestAnimationFrame(()=>{ fill.style.width = '0%'; });
+  label.textContent = `Nivel: ${diff.label} · tienes ${(diff.ms/1000)}s para responder`;
+  timerTimeoutHandle = setTimeout(handleTimeout, diff.ms);
+}
+
+function handleTimeout(){
+  if(!gameActive || answered) return;
+  answered = true;
+  document.querySelectorAll('.option-btn').forEach(b=>b.disabled = true);
+  const correctBtn = document.querySelector('.option-btn[data-correct="true"]');
+  if(correctBtn) correctBtn.classList.add('correct');
+  wrongCount++; streak = 0;
+  playWrongSound();
+  const feedback = document.getElementById('verb-feedback-msg');
+  feedback.textContent = `⏰ ¡Se acabó el tiempo! Era: ${currentQuestion.correctText} (${currentQuestion.correctHira})`;
+  feedback.className = 'verb-feedback-msg wrong';
+  updateScoreboard();
+  catBounce('sad');
+  setTimeout(()=>{ if(gameActive) nextQuestion(); }, 1500);
+}
+
+/* ---------- Lógica del juego ---------- */
+function startGame(){
+  const registerCount = (toggles.registerFormal?1:0) + (toggles.registerPlain?1:0);
+  const total = getEnabledVariants().length;
+  if(selectedLevels.size === 0 || registerCount === 0 || total < 3){
+    refreshLevelWarning();
+    refreshSelectionWarning();
+    showToast('Ajusta tu selección: elige al menos un nivel, un registro y 3 combinaciones posibles 🐱');
+    return;
+  }
+  currentStep = 0;
+  answered = false;
+  gameActive = true;
+  lastVerbIndex = null;
+  buildBridge();
+  showScreen('game');
+  nextQuestion();
+}
+
+function getActiveVerbIndices(){
+  return VERBS.map((v,i)=>i).filter(i=>selectedLevels.has(VERBS[i].level));
+}
+
+function pickVerbIndex(){
+  const pool = getActiveVerbIndices();
+  if(pool.length === 0) return 0; // resguardo; startGame ya valida que haya al menos un nivel
+  let idx;
+  do{ idx = pool[Math.floor(Math.random()*pool.length)]; }
+  while(pool.length > 1 && idx === lastVerbIndex);
+  lastVerbIndex = idx;
+  return idx;
+}
+
+function shuffle(arr){
+  return arr.slice().sort(()=>Math.random()-0.5);
+}
+
+// Compara dos variantes (para poder excluir el objetivo de la lista de
+// distractores candidatos).
+function variantsEqual(a, b){
+  if(a.type !== b.type) return false;
+  if(a.function !== b.function || a.polarity !== b.polarity) return false;
+  if(a.type === 'main') return a.register===b.register && a.tense===b.tense;
+  if(a.type === 'tara') return a.register===b.register;
+  return true; // te, ba: sólo función + polaridad
+}
+
+function nextQuestion(){
+  answered = false;
+  clearTimeout(timerTimeoutHandle);
+
+  const variants = getEnabledVariants();
+  const verbIndex = pickVerbIndex();
+  const verb = VERBS[verbIndex];
+  const targetVariant = variants[Math.floor(Math.random()*variants.length)];
+  const correct = getVariantText(verb, targetVariant);
+  const correctText = correct.text, correctHira = correct.hira;
+
+  // Distractores: otras combinaciones activas aplicadas al MISMO verbo,
+  // evitando textos idénticos al correcto (p. ej. potencial y pasivo
+  // coinciden en los verbos ichidan / kuru).
+  const sameVerbCandidates = shuffle(variants.filter(v=>!variantsEqual(v, targetVariant)));
+  let distractorTexts = [];
+  for(const v of sameVerbCandidates){
+    if(distractorTexts.length >= 2) break;
+    const val = getVariantText(verb, v);
+    if(val.text !== correctText && !distractorTexts.some(d=>d.text===val.text)){
+      distractorTexts.push(val);
+    }
+  }
+
+  // Respaldo: si la combinación elegida no deja suficientes variantes con
+  // texto distinto en el mismo verbo (selección muy pequeña o muchas
+  // coincidencias), se completa con la misma variante objetivo aplicada a
+  // otros verbos, para garantizar siempre 3 opciones.
+  if(distractorTexts.length < 2){
+    const otherVerbIdx = shuffle(getActiveVerbIndices().filter(i=>i!==verbIndex));
+    for(const i of otherVerbIdx){
+      if(distractorTexts.length>=2) break;
+      const val = getVariantText(VERBS[i], targetVariant);
+      if(val.text!==correctText && !distractorTexts.some(d=>d.text===val.text)){
+        distractorTexts.push(val);
+      }
+    }
+  }
+
+  const options = [
+    { text:correctText, hira:correctHira, correct:true },
+    ...distractorTexts.map(d=>({ text:d.text, hira:d.hira, correct:false }))
+  ].sort(()=>Math.random()-0.5);
+
+  currentQuestion = { verbIndex, targetVariant, correctText, correctHira, options };
+
+  document.getElementById('verb-kanji').textContent = verb.jisho;
+  document.getElementById('verb-hira').textContent = `(${verb.jishoHira})`;
+  document.getElementById('verb-meaning').textContent = verb.meaning.charAt(0).toUpperCase()+verb.meaning.slice(1);
+  document.getElementById('verb-question').textContent = `¿Cuál es la forma ${getVariantLabel(targetVariant)} de este verbo?`;
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  options.forEach((opt)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.dataset.correct = opt.correct ? 'true' : 'false';
+    btn.innerHTML = `${opt.text}<span class="opt-hira">${opt.hira}</span>`;
+    btn.onclick = (e)=> selectOption(opt, btn, e);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('verb-feedback-msg').textContent = '';
+  document.getElementById('verb-feedback-msg').className = 'verb-feedback-msg';
+
+  startTimer();
+}
+
+function selectOption(opt, btnEl, evt){
+  if(answered) return;
+  answered = true;
+  clearTimeout(timerTimeoutHandle);
+  const rect = btnEl.getBoundingClientRect();
+  document.querySelectorAll('.option-btn').forEach(b=>b.disabled = true);
+  const feedback = document.getElementById('verb-feedback-msg');
+
+  if(opt.correct){
+    btnEl.classList.add('correct');
+    correctCount++; streak++;
+    const gained = 15;
+    points += gained;
+    pulsePoints(gained, rect.left+rect.width/2, rect.top);
+    playCorrectSound();
+    feedback.textContent = '¡Correcto! 🎉';
+    feedback.className = 'verb-feedback-msg correct';
+    updateScoreboard();
+    catBounce('hop');
+    currentStep++;
+    updateBridgeVisual();
+    setTimeout(()=>{
+      if(currentStep >= TOTAL_STEPS){ finishBridge(); }
+      else if(gameActive){ nextQuestion(); }
+    }, 850);
+  } else {
+    btnEl.classList.add('wrong');
+    const correctBtn = document.querySelector('.option-btn[data-correct="true"]');
+    if(correctBtn) correctBtn.classList.add('correct');
+    wrongCount++; streak = 0;
+    playWrongSound();
+    feedback.textContent = `Casi... la respuesta correcta era: ${currentQuestion.correctText} (${currentQuestion.correctHira})`;
+    feedback.className = 'verb-feedback-msg wrong';
+    updateScoreboard();
+    catBounce('sad');
+    setTimeout(()=>{ if(gameActive) nextQuestion(); }, 1500);
+  }
+}
+
+function finishBridge(){
+  gameActive = false;
+  clearTimeout(timerTimeoutHandle);
+  const total = correctCount + wrongCount;
+  const acc = total ? Math.round(correctCount/total*100) : 100;
+  document.getElementById('done-text').textContent =
+    `El gato llegó al otro lado del puente — precisión de la sesión: ${acc}% · Puntos totales: ${points}`;
+  showScreen('done');
+}
+
+/* ---------- Inicio ---------- */
+renderLevelToggles();
+renderFilterGrid();
+updateScoreboard();
+</script>
+</body>
+</html>
