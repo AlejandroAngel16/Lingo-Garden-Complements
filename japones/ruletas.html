@@ -12,7 +12,7 @@
   --line:#E5D0AE; --brown:#7A4527; --on-brown:#FFF3DF; --peach:#F7AC84; --on-peach:#472C1A;
   --pointer:#7A4527; --hub:#FFF8EA; --rim:#7A4527;
   --w1:#F6E3C0; --w2:#F9B58C; --w3:#8A5733; --w4:#FBD5AE; --w5:#C98657; --w6:#EBCF9F;
-  --serif:"M PLUS Rounded 1c",Georgia,"Hiragino Maru Gothic ProN",serif; --sans:"Yu Gothic",system-ui,-apple-system,"M PLUS Rounded 1c",Roboto,sans-serif;
+  --serif:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",system-ui,sans-serif; --sans:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
@@ -20,7 +20,7 @@
     --bg:#1A120D; --surface:#271B14; --input:#1F1510; --text:#F5E7D1; --muted:#BBA48C;
     --line:#41301F; --brown:#E0AE86; --on-brown:#1A120D; --peach:#E98C5E; --on-peach:#1A120D;
     --pointer:#F0A878; --hub:#271B14; --rim:#E0AE86;
-    --w1:#4F3626; --w2:#b18874; --w3:#2E2018; --w4:#7A4C31; --w5:#D58C5F; --w6:#3F2B1E;
+    --w1:#4F3626; --w2:#B7653B; --w3:#2E2018; --w4:#7A4C31; --w5:#D58C5F; --w6:#3F2B1E;
   }
 }
 :root[data-theme="dark"]{
@@ -65,6 +65,8 @@ textarea{width:100%;min-height:150px;resize:vertical;border:2px solid var(--line
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .all{display:flex;justify-content:center;margin-top:22px}
 .all[hidden]{display:none}
+.chk{display:inline-flex;align-items:center;gap:8px;font-weight:500;font-size:.9rem;cursor:pointer}
+.chk input{width:18px;height:18px;margin:0;accent-color:var(--brown);cursor:pointer}
 .tog{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--muted);font:600 .9rem var(--sans);padding:4px 2px;margin-bottom:6px;cursor:pointer}
 .tog:hover{color:var(--text)}
 .chev{transition:transform .2s}
@@ -124,7 +126,7 @@ const wheels = [0, 1].map(idx => {
   el.innerHTML = `
     <h2>Ruleta ${idx + 1}</h2>
     <div class="stage"><div class="pointer"></div><canvas aria-label="Ruleta ${idx + 1}"></canvas></div>
-    <div class="row"><button type="button" class="btn spin">Girar</button></div>
+    <div class="row"><button type="button" class="btn spin">Girar</button><label class="chk"><input type="checkbox" class="rm"> Eliminar la franja al salir</label></div>
     <div class="res" aria-live="polite"><p class="hint">Gira la ruleta para ver el resultado.</p></div>
     <div>
       <button type="button" class="tog" aria-expanded="true" aria-controls="box${idx}"><svg class="chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Ocultar contenido</span></button>
@@ -145,6 +147,8 @@ const wheels = [0, 1].map(idx => {
     hint(w, 'Gira la ruleta para ver el resultado.'); draw(w);
   });
   w.btn.addEventListener('click', () => spin(w));
+  w.rm = el.querySelector('.rm'); w.rm.checked = !!(st.remove && st.remove[idx]);
+  w.rm.addEventListener('change', () => { if (!Array.isArray(st.remove)) st.remove = [false, false]; st.remove[idx] = w.rm.checked; save(); });
   const tog = el.querySelector('.tog'), box = el.querySelector('.box');
   tog.addEventListener('click', () => {
     const open = tog.getAttribute('aria-expanded') === 'true';
@@ -226,7 +230,18 @@ function spin(w) {
       const k = Math.floor(((((-Math.PI / 2 - w.angle) % TAU) + TAU) % TAU) / sl);
       if (k !== last) { last = k; if (p < 1 && t - lt > 40) { lt = t; tick(); } }
       if (p < 1) requestAnimationFrame(f);
-      else { w.spinning = false; busy(); show(w, w.items[win]); chime(); done(); }
+      else {
+        show(w, w.items[win]); chime();
+        if (w.rm.checked) {
+          setTimeout(() => {
+            w.items.splice(win, 1);
+            w.ta.value = w.items.map(x => x.c ? x.w + ' | ' + x.c : x.w).join('\n');
+            st.texts[w.idx] = w.ta.value; save();
+            w.cnt.textContent = w.items.length + (w.items.length === 1 ? ' franja' : ' franjas');
+            w.spinning = false; busy(); draw(w); done();
+          }, 1300);
+        } else { w.spinning = false; busy(); done(); }
+      }
     })(t0);
   });
 }
@@ -249,7 +264,9 @@ const sndBtn = document.getElementById('snd');
 function syncSnd() { sndBtn.textContent = soundOn ? 'Sonido activado' : 'Sonido apagado'; sndBtn.setAttribute('aria-pressed', String(soundOn)); }
 sndBtn.addEventListener('click', () => { soundOn = !soundOn; st.sound = soundOn; save(); syncSnd(); if (soundOn) tick(); });
 syncSnd(); syncTheme(); setCount(st.count === 2 ? 2 : 1);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => wheels.forEach(draw));
+if (document.fonts && document.fonts.load) {
+  Promise.all([document.fonts.load('700 16px "M PLUS Rounded 1c"'), document.fonts.ready]).then(() => wheels.forEach(draw)).catch(() => {});
+}
 </script>
 </body>
 </html>
