@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conjugaison en Ruta — Conjugar en francés</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   1. DESIGN TOKENS — Warm Rustic palette (change colors here)
+   ===================================================================== */
+:root{
+  --olive:#585123;      /* Olive Bark */
+  --honey:#eec170;      /* Honey Bronze */
+  --sandy:#f2a65a;      /* Sandy Brown */
+  --tangerine:#f58549;  /* Atomic Tangerine */
+  --brandy:#772f1a;     /* Brandy */
+  --bg:#2b2711;         /* darkened Olive Bark, page background */
+  --panel:#38331a;      /* panel background */
+  --ink:#fbefd6;        /* main text */
+  --glow:0 0 12px rgba(245,133,73,.6), 0 0 32px rgba(242,166,90,.3);
+  --hi:var(--honey);    /* highlight text + borders */
+  --soft:var(--sandy);  /* secondary text */
+  --pop:var(--tangerine);
+  --line:rgba(238,193,112,.45);
+  --line-soft:rgba(238,193,112,.25);
+  --inset:rgba(0,0,0,.2);
+  --bg-glow:var(--olive);
+  color-scheme:dark;
+  --font:'Rubik', system-ui, sans-serif;
+}
+
+/* Light theme — only the semantic colors change */
+:root[data-theme="light"]{
+  --bg:#fbf0d9; --panel:#fff8ea; --ink:#3a3318; --bg-glow:#f2d9a6;
+  --hi:var(--brandy); --soft:var(--olive); --pop:#b5461a;
+  --line:rgba(119,47,26,.45); --line-soft:rgba(119,47,26,.22); --inset:rgba(88,81,35,.08);
+  --glow:0 0 10px rgba(245,133,73,.55), 0 0 24px rgba(242,166,90,.3);
+  color-scheme:light;
+}
+.theme-btn{position:fixed; top:14px; right:14px; z-index:20; padding:8px 14px; font-size:13px; background:var(--panel)}
+
+/* =====================================================================
+   2. BASE
+   ===================================================================== */
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{
+  margin:0; min-height:100vh; padding:28px 16px 48px;
+  font-family:var(--font); color:var(--ink);
+  background:radial-gradient(circle at 15% 0%, var(--bg-glow), transparent 55%), var(--bg);
+  display:flex; justify-content:center;
+}
+.app{width:100%; max-width:760px}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--tangerine); outline-offset:2px}
+
+header{text-align:center; margin-bottom:22px; position:relative}
+h1{margin:0; font-weight:700; font-size:clamp(30px,6vw,46px); color:var(--hi); text-shadow:var(--glow)}
+h1 span{font-style:italic; font-weight:500; color:var(--pop)}
+header p{margin:8px auto 0; max-width:460px; color:var(--soft); font-size:15px}
+
+.panel{
+  background:var(--panel); border:1px solid var(--line-soft);
+  border-radius:18px; padding:24px; box-shadow:0 12px 30px rgba(0,0,0,.35);
+}
+h2{margin:0 0 10px; font-size:16px; font-weight:600; color:var(--hi)}
+.group-title{margin:14px 0 8px; font-size:14px; color:var(--soft); font-weight:500}
+.hint{font-size:13px; color:var(--soft); opacity:.85; margin:0 0 12px}
+
+/* =====================================================================
+   3. SETUP SCREEN
+   ===================================================================== */
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.toggle{
+  font-size:14px; font-weight:500; padding:9px 16px; border-radius:999px; cursor:pointer;
+  color:var(--hi); background:transparent; border:1.5px solid var(--line);
+  transition:background .15s, box-shadow .15s;
+}
+.toggle:hover{border-color:var(--hi)}
+.toggle[aria-pressed="true"]{background:var(--honey); color:var(--brandy); border-color:var(--hi); box-shadow:var(--glow)}
+.link-btn{background:none; border:none; color:var(--soft); font-size:13px; text-decoration:underline; cursor:pointer; padding:4px}
+
+.options{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:22px 0}
+.options label{display:block; font-size:14px; color:var(--soft); font-weight:500}
+.options input{
+  width:100%; margin-top:6px; padding:11px 12px; font:inherit; font-size:18px; font-weight:600;
+  color:var(--hi); background:var(--bg); border:1.5px solid var(--line); border-radius:10px;
+}
+.error{color:var(--pop); font-size:14px; min-height:20px; margin:0 0 10px}
+
+.btn{
+  font-size:17px; font-weight:600; padding:14px 22px; border:none; border-radius:12px; cursor:pointer;
+  color:var(--brandy); background:linear-gradient(135deg, var(--honey), var(--tangerine));
+  box-shadow:var(--glow); transition:transform .12s;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn.wide{width:100%}
+.btn.ghost{background:transparent; color:var(--hi); border:1.5px solid var(--line); box-shadow:none}
+.btn:disabled{opacity:.5; cursor:default; transform:none}
+
+/* =====================================================================
+   4. GAME SCREEN
+   ===================================================================== */
+.topbar{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; color:var(--soft); margin-bottom:10px}
+.topbar b{color:var(--hi); font-size:18px}
+.timer{height:10px; background:var(--bg); border-radius:99px; overflow:hidden; margin-bottom:6px}
+.timer i{display:block; height:100%; width:100%; border-radius:99px; background:var(--tangerine); box-shadow:var(--glow); transition:width 1s linear}
+.timer.low i{background:var(--sandy)}
+.time-num{text-align:right; font-size:13px; color:var(--soft); margin-bottom:14px}
+
+.question{font-size:clamp(18px,3.6vw,23px); font-weight:500; margin:6px 0 4px; line-height:1.35}
+.question strong{color:var(--hi); text-shadow:var(--glow)}
+.question em{color:var(--soft); font-size:.8em}
+.example{margin:0 0 16px; font-size:13px; color:var(--soft); opacity:.85}
+
+.rows{display:grid; gap:8px; margin-bottom:18px}
+.row{display:grid; grid-template-columns:110px 1fr auto; align-items:center; gap:10px}
+.pron{font-weight:600; color:var(--hi); font-size:15px}
+.slot{
+  min-height:46px; display:flex; align-items:center; padding:3px;
+  border:2px dashed var(--line); border-radius:11px; background:var(--inset);
+  transition:border-color .15s, box-shadow .15s;
+}
+.slot.over, .slot.target{border-color:var(--tangerine); box-shadow:var(--glow)}
+.slot.ok{border:2px solid var(--hi); box-shadow:var(--glow)}
+.slot.bad{border:2px solid var(--tangerine); background:rgba(119,47,26,.55)}
+.fix{font-size:14px; font-weight:600; color:var(--hi); white-space:nowrap}
+
+.bank{
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding:14px; min-height:68px;
+  border:1.5px solid var(--line-soft); border-radius:14px; background:var(--inset);
+}
+.bank.over{border-color:var(--tangerine)}
+.chip{
+  font-size:16px; font-weight:600; padding:10px 15px; border:none; border-radius:10px; cursor:grab;
+  color:var(--brandy); background:var(--honey); box-shadow:0 0 10px rgba(238,193,112,.35);
+}
+.slot .chip{width:100%; text-align:left; box-shadow:none}
+.chip.selected{background:var(--sandy); box-shadow:var(--glow); transform:scale(1.04)}
+.chip.dragging{opacity:.4}
+.locked .chip{cursor:default}
+
+.actions{display:flex; gap:10px; margin-top:18px}
+.actions .btn{flex:1}
+.feedback{margin:14px 0 0; font-weight:600; color:var(--hi); text-align:center; min-height:24px}
+
+/* =====================================================================
+   5. RESULT SCREEN + FOOTER
+   ===================================================================== */
+.result{text-align:center}
+.big-score{font-size:64px; font-weight:700; color:var(--hi); text-shadow:var(--glow); margin:6px 0}
+.result p{color:var(--soft); margin:4px 0}
+.result .actions{margin-top:22px}
+footer{text-align:center; margin-top:28px; font-size:13px; color:var(--soft); opacity:.8}
+
+@media (max-width:520px){
+  body{padding-top:64px}
+  .options{grid-template-columns:1fr}
+  .row{grid-template-columns:84px 1fr; row-gap:2px}
+  .fix{grid-column:2}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<main class="app">
+
+  <header>
+    <button class="btn ghost theme-btn" id="themeBtn" type="button"></button>
+    <h1>Conjugaison <span>en Route</span></h1>
+    <p>Arrastra cada forma verbal a su pronombre. Elige los tiempos, el nivel y el cronómetro.</p>
+  </header>
+
+  <!-- SETUP -->
+  <section id="setup" class="panel">
+    <h2>1. Tiempos verbales</h2>
+    <p class="hint">Marca uno o varios. <button class="link-btn" id="allTenses">Todos</button><button class="link-btn" id="noTenses">Ninguno</button></p>
+    <div id="tenseGroups"></div>
+
+    <h2 style="margin-top:22px">2. Nivel de los verbos</h2>
+    <div id="levelChips" class="chips"></div>
+
+    <div class="options">
+      <label>Segundos por pregunta<input type="number" id="secInput" min="10" max="600" step="5"></label>
+      <label>Número de preguntas<input type="number" id="qInput" min="1" max="50"></label>
+    </div>
+
+    <p class="error" id="setupError"></p>
+    <button class="btn wide" id="startBtn">Empezar a jugar</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="panel" hidden>
+    <div class="topbar">
+      <span>Pregunta <b id="qNum">1</b> / <span id="qTotal">10</span></span>
+      <span>Puntos <b id="score">0</b></span>
+      <button class="btn ghost" id="quitBtn" style="padding:7px 14px;font-size:13px">Salir</button>
+    </div>
+    <div class="timer" id="timerBar"><i id="timerFill"></i></div>
+    <div class="time-num"><span id="timeNum">60</span> s</div>
+
+    <p class="question" id="question"></p>
+    <p class="example" id="example"></p>
+
+    <div class="rows" id="rows"></div>
+    <div class="bank" id="bank"></div>
+
+    <p class="feedback" id="feedback"></p>
+    <div class="actions">
+      <button class="btn" id="checkBtn">Comprobar</button>
+      <button class="btn" id="nextBtn" hidden>Siguiente</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="panel result" hidden>
+    <h2>Fin de la partida</h2>
+    <div class="big-score" id="finalScore">0</div>
+    <p id="finalDetail"></p>
+    <div class="actions">
+      <button class="btn" id="againBtn">Jugar de nuevo</button>
+    </div>
+  </section>
+
+  <footer>Diseñado por Luis Alejandro Cuevas</footer>
+</main>
+
+<script>
+/* =====================================================================
+   A. SETTINGS — defaults you can change
+   ===================================================================== */
+const SETTINGS = {
+  seconds: 60,        // default time per question (player can change it)
+  questions: 10,      // default number of questions per game
+  pointsPerRow: 10,   // points for each correct pronoun line
+  perfectBonus: 20,   // extra points when all 6 lines are correct
+};
+
+const PRONOUNS = ["Je", "Tu", "Il / elle / on", "Nous", "Vous", "Ils / elles"];
+const LEVELS = ["A1", "A2", "B1", "B2"];
+
+/* =====================================================================
+   B. TENSES — add or rename here
+   id      = unique name
+   mood    = group shown in the menu
+   label   = button text
+   es      = text used inside the question
+   simple  = engine key for simple tenses (pres, fut, ps, imp, cond, sub)
+   aux     = engine key of the auxiliary for compound tenses
+   ===================================================================== */
+const TENSES = [
+  { id:"ind_pres", mood:"Indicatif",  label:"présent",          es:"presente simple",             simple:"pres" },
+  { id:"ind_fut",  mood:"Indicatif",  label:"futur",            es:"futuro simple",               simple:"fut"  },
+  { id:"ind_ps",   mood:"indicatif",  label:"Passé",     es:"pasado simple", simple:"ps" },
+  { id:"ind_imp",  mood:"indicatif",  label:"imparfait",        es:"pasado imperfecto",           simple:"imp"  },
+  { id:"ind_pc",   mood:"indicatif",  label:"Passé composé",     es:"presente perfecto (pasado compuesto)",        aux:"pres"    },
+  { id:"ind_pqp",  mood:"indicatif",  label:"Plus-que-parfait",  es:"pluscuamperfecto",     aux:"imp"     },
+  { id:"con_pres", mood:"conditionnel", label:"présent",          es:"condicional presente",            simple:"cond" },
+  { id:"con_pc",   mood:"conditionnel", label:"Passé composé",     es:"condicional perfecto",       aux:"cond"    },
+  { id:"sub_pres", mood:"subjonctif",  label:"présent",          es:"subjuntivo presente",             simple:"sub"  },
+  { id:"sub_pc",   mood:"subjonctif",  label:"Passé composé",     es:"subjuntivo perfecto",        aux:"sub"     },
+];
+
+/* =====================================================================
+   C. VERBS — add more here
+   V(infinitive, Spanish, level, past participle, options)
+   Regular verbs need no options (-er, -ir like finir, -re like vendre).
+   Options (only for irregular verbs):
+     e:1        uses "être" as auxiliary (otherwise "avoir")
+     p:"..."    6 present forms separated by commas
+     f:"..."    future/conditional stem
+     i:"..."    imperfect stem (default: nous-form without -ons)
+     q:"..."    subjunctive: 6 forms (commas) or "stem1|stem2" (je-stem|nous-stem)
+     ps:"..."   passé simple: "i:stem", "u:stem", or 6 forms (commas)
+   ===================================================================== */
+const V = (inf, es, lvl, pp, o = {}) => ({ inf, es, lvl, pp, ...o });
+const VERBS = [
+  // ---- A1
+  V("être","ser / estar","A1","été",{p:"suis,es,est,sommes,êtes,sont",f:"ser",i:"ét",q:"sois,sois,soit,soyons,soyez,soient",ps:"u:f"}),
+  V("avoir","tener / haber","A1","eu",{p:"ai,as,a,avons,avez,ont",f:"aur",q:"aie,aies,ait,ayons,ayez,aient",ps:"u:e"}),
+  V("parler","hablar","A1","parlé"),
+  V("aimer","amar / gustar","A1","aimé"),
+  V("habiter","vivir (en un lugar)","A1","habité"),
+  V("regarder","mirar","A1","regardé"),
+  V("écouter","escuchar","A1","écouté"),
+  V("chanter","cantar","A1","chanté"),
+  V("donner","dar","A1","donné"),
+  V("trouver","encontrar","A1","trouvé"),
+  V("aller","ir","A1","allé",{e:1,p:"vais,vas,va,allons,allez,vont",f:"ir",q:"aill|all"}),
+  V("finir","terminar","A1","fini"),
+  V("choisir","elegir","A1","choisi"),
+  V("vendre","vender","A1","vendu"),
+  V("attendre","esperar","A1","attendu"),
+  V("faire","hacer","A1","fait",{p:"fais,fais,fait,faisons,faites,font",f:"fer",q:"fass|fass",ps:"i:f"}),
+  V("prendre","tomar","A1","pris",{p:"prends,prends,prend,prenons,prenez,prennent",ps:"i:pr"}),
+  V("venir","venir","A1","venu",{e:1,p:"viens,viens,vient,venons,venez,viennent",f:"viendr",ps:"vins,vins,vint,vînmes,vîntes,vinrent"}),
+  V("voir","ver","A1","vu",{p:"vois,vois,voit,voyons,voyez,voient",f:"verr",ps:"i:v"}),
+  V("vouloir","querer","A1","voulu",{p:"veux,veux,veut,voulons,voulez,veulent",f:"voudr",q:"veuill|voul",ps:"u:voul"}),
+  V("pouvoir","poder","A1","pu",{p:"peux,peux,peut,pouvons,pouvez,peuvent",f:"pourr",q:"puiss|puiss",ps:"u:p"}),
+  V("dire","decir","A1","dit",{p:"dis,dis,dit,disons,dites,disent",ps:"i:d"}),
+  V("partir","partir / irse","A1","parti",{e:1,p:"pars,pars,part,partons,partez,partent",ps:"i:part"}),
+  // ---- A2
+  V("travailler","trabajar","A2","travaillé"),
+  V("répondre","responder","A2","répondu"),
+  V("réussir","tener éxito","A2","réussi"),
+  V("sortir","salir","A2","sorti",{e:1,p:"sors,sors,sort,sortons,sortez,sortent",ps:"i:sort"}),
+  V("dormir","dormir","A2","dormi",{p:"dors,dors,dort,dormons,dormez,dorment",ps:"i:dorm"}),
+  V("savoir","saber","A2","su",{p:"sais,sais,sait,savons,savez,savent",f:"saur",q:"sach|sach",ps:"u:s"}),
+  V("devoir","deber","A2","dû",{p:"dois,dois,doit,devons,devez,doivent",f:"devr",ps:"u:d"}),
+  V("lire","leer","A2","lu",{p:"lis,lis,lit,lisons,lisez,lisent",ps:"u:l"}),
+  V("écrire","escribir","A2","écrit",{p:"écris,écris,écrit,écrivons,écrivez,écrivent",ps:"i:écriv"}),
+  V("mettre","poner","A2","mis",{p:"mets,mets,met,mettons,mettez,mettent",ps:"i:m"}),
+  V("ouvrir","abrir","A2","ouvert",{p:"ouvre,ouvres,ouvre,ouvrons,ouvrez,ouvrent",ps:"i:ouvr"}),
+  V("apprendre","aprender","A2","appris",{p:"apprends,apprends,apprend,apprenons,apprenez,apprennent",ps:"i:appr"}),
+  V("comprendre","entender","A2","compris",{p:"comprends,comprends,comprend,comprenons,comprenez,comprennent",ps:"i:compr"}),
+  // ---- B1
+  V("perdre","perder","B1","perdu"),
+  V("grandir","crecer","B1","grandi"),
+  V("connaître","conocer","B1","connu",{p:"connais,connais,connaît,connaissons,connaissez,connaissent",ps:"u:conn"}),
+  V("vivre","vivir","B1","vécu",{p:"vis,vis,vit,vivons,vivez,vivent",ps:"u:véc"}),
+  V("boire","beber","B1","bu",{p:"bois,bois,boit,buvons,buvez,boivent",ps:"u:b"}),
+  V("croire","creer","B1","cru",{p:"crois,crois,croit,croyons,croyez,croient",ps:"u:cr"}),
+  V("recevoir","recibir","B1","reçu",{p:"reçois,reçois,reçoit,recevons,recevez,reçoivent",f:"recevr",ps:"u:reç"}),
+  V("suivre","seguir","B1","suivi",{p:"suis,suis,suit,suivons,suivez,suivent",ps:"i:suiv"}),
+  V("courir","correr","B1","couru",{p:"cours,cours,court,courons,courez,courent",f:"courr",ps:"u:cour"}),
+  V("tenir","sostener / tener","B1","tenu",{p:"tiens,tiens,tient,tenons,tenez,tiennent",f:"tiendr",ps:"tins,tins,tint,tînmes,tîntes,tinrent"}),
+  // ---- B2
+  V("réfléchir","reflexionar","B2","réfléchi"),
+  V("valoir","valer","B2","valu",{p:"vaux,vaux,vaut,valons,valez,valent",f:"vaudr",q:"vaill|val",ps:"u:val"}),
+  V("mourir","morir","B2","mort",{e:1,p:"meurs,meurs,meurt,mourons,mourez,meurent",f:"mourr",ps:"u:mour"}),
+  V("naître","nacer","B2","né",{e:1,p:"nais,nais,naît,naissons,naissez,naissent",ps:"i:naqu"}),
+  V("plaire","agradar","B2","plu",{p:"plais,plais,plaît,plaisons,plaisez,plaisent",ps:"u:pl"}),
+  V("résoudre","resolver","B2","résolu",{p:"résous,résous,résout,résolvons,résolvez,résolvent",ps:"u:résol"}),
+  V("conduire","conducir","B2","conduit",{p:"conduis,conduis,conduit,conduisons,conduisez,conduisent",ps:"i:conduis"}),
+  V("craindre","temer","B2","craint",{p:"crains,crains,craint,craignons,craignez,craignent",f:"craindr",ps:"i:craign"}),
+];
+
+/* =====================================================================
+   D. CONJUGATION ENGINE — builds the 6 forms for any verb + tense
+   ===================================================================== */
+const ENDINGS = {
+  pres: { er:["e","es","e","ons","ez","ent"], ir:["is","is","it","issons","issez","issent"], re:["s","s","","ons","ez","ent"] },
+  imp:  ["ais","ais","ait","ions","iez","aient"],
+  fut:  ["ai","as","a","ons","ez","ont"],
+  sub:  ["e","es","e","ions","iez","ent"],
+  ps:   { er:["ai","as","a","âmes","âtes","èrent"], ir:["is","is","it","îmes","îtes","irent"],
+          re:["is","is","it","îmes","îtes","irent"], i:["is","is","it","îmes","îtes","irent"],
+          u:["us","us","ut","ûmes","ûtes","urent"] },
+};
+const AGREEMENT = ["(e)","(e)","(e)","(e)s","(e)s","(e)s"]; // for verbs conjugated with être
+const csv = s => s.split(",");
+const add = (stem, endings) => endings.map(e => stem + e);
+const findVerb = inf => VERBS.find(v => v.inf === inf);
+
+function presentForms(v){
+  if (v.p) return csv(v.p);
+  const kind = v.inf.slice(-2);
+  return add(v.inf.slice(0, -2), ENDINGS.pres[kind]);
+}
+
+function simpleForms(v, key){
+  const p = presentForms(v);
+  const futStem = v.f || (v.inf.endsWith("e") ? v.inf.slice(0, -1) : v.inf);
+  switch (key){
+    case "pres": return p;
+    case "imp":  return add(v.i || p[3].slice(0, -3), ENDINGS.imp);
+    case "fut":  return add(futStem, ENDINGS.fut);
+    case "cond": return add(futStem, ENDINGS.imp);
+    case "ps": {
+      if (!v.ps) return add(v.inf.slice(0, -2), ENDINGS.ps[v.inf.slice(-2)]);
+      if (v.ps.includes(",")) return csv(v.ps);
+      const [type, stem] = v.ps.split(":");
+      return add(stem, ENDINGS.ps[type]);
+    }
+    case "sub": {
+      if (v.q && v.q.includes(",")) return csv(v.q);
+      const [sg, pl] = v.q ? v.q.split("|") : [p[5].slice(0, -3), p[3].slice(0, -3)];
+      return [sg + "e", sg + "es", sg + "e", pl + "ions", pl + "iez", sg + "ent"];
+    }
+  }
+}
+
+function conjugate(v, tense){
+  if (!tense.aux) return simpleForms(v, tense.simple);
+  const auxVerb = findVerb(v.e ? "être" : "avoir");
+  const aux = simpleForms(auxVerb, tense.aux);
+  return aux.map((a, i) => `${a} ${v.pp}${v.e ? AGREEMENT[i] : ""}`);
+}
+
+/* =====================================================================
+   E. HELPERS + STATE
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+const pick = { tenses: new Set(["ind_pres"]), levels: new Set(["A1"]) };
+const game = { questions: [], index: 0, score: 0, rows: 0, seconds: 60, timeLeft: 0, timer: null, current: null, checked: false, selected: null, dragged: null };
+
+/* =====================================================================
+   F. SETUP SCREEN
+   ===================================================================== */
+function makeToggle(label, set, id, parent){
+  const b = document.createElement("button");
+  b.className = "toggle"; b.textContent = label;
+  b.setAttribute("aria-pressed", set.has(id));
+  b.dataset.id = id;
+  b.onclick = () => {
+    set.has(id) ? set.delete(id) : set.add(id);
+    b.setAttribute("aria-pressed", set.has(id));
+  };
+  parent.appendChild(b);
+}
+
+function buildSetup(){
+  [...new Set(TENSES.map(t => t.mood))].forEach(mood => {
+    const title = document.createElement("div");
+    title.className = "group-title"; title.textContent = mood;
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    TENSES.filter(t => t.mood === mood).forEach(t => makeToggle(t.label, pick.tenses, t.id, chips));
+    $("tenseGroups").append(title, chips);
+  });
+  LEVELS.forEach(l => makeToggle(l, pick.levels, l, $("levelChips")));
+  $("secInput").value = SETTINGS.seconds;
+  $("qInput").value = SETTINGS.questions;
+}
+
+function setAllTenses(on){
+  pick.tenses.clear();                       // mutate in place: toggle buttons hold a reference to this Set
+  if (on) TENSES.forEach(t => pick.tenses.add(t.id));
+  document.querySelectorAll("#tenseGroups .toggle").forEach(b => b.setAttribute("aria-pressed", pick.tenses.has(b.dataset.id)));
+}
+
+/* =====================================================================
+   G. GAME FLOW
+   ===================================================================== */
+function startGame(){
+  const verbs = VERBS.filter(v => pick.levels.has(v.lvl));
+  const tenses = TENSES.filter(t => pick.tenses.has(t.id));
+  const seconds = Math.min(600, Math.max(10, parseInt($("secInput").value) || SETTINGS.seconds));
+  const total = Math.min(50, Math.max(1, parseInt($("qInput").value) || SETTINGS.questions));
+
+  if (!tenses.length) return ($("setupError").textContent = "Elige al menos un tiempo verbal.");
+  if (!verbs.length)  return ($("setupError").textContent = "Elige al menos un nivel.");
+  $("setupError").textContent = "";
+
+  const combos = shuffle(verbs.flatMap(v => tenses.map(t => ({ v, t }))));
+  Object.assign(game, { questions: combos.slice(0, total), index: 0, score: 0, rows: 0, seconds });
+  $("setup").hidden = true; $("result").hidden = true; $("game").hidden = false;
+  showQuestion();
+}
+
+function showQuestion(){
+  const { v, t } = game.questions[game.index];
+  game.current = { v, t, answers: conjugate(v, t) };
+  game.checked = false; game.selected = null;
+
+  $("qNum").textContent = game.index + 1;
+  $("qTotal").textContent = game.questions.length;
+  $("score").textContent = game.score;
+  $("question").innerHTML = `¿Cuál es el <strong>${t.es}</strong> de “<strong>${v.inf}</strong>” <em>(${v.es})</em>?`;
+  $("example").textContent = "Arrastra las respuestas a los espacios vacíos (o toca una respuesta y luego un espacio).";
+  $("feedback").textContent = "";
+  $("checkBtn").hidden = false; $("nextBtn").hidden = true;
+  $("game").classList.remove("locked");
+
+  $("rows").innerHTML = "";
+  PRONOUNS.forEach((pr, i) => {
+    const row = document.createElement("div"); row.className = "row";
+    row.innerHTML = `<span class="pron">${pr}</span><div class="slot" data-i="${i}" tabindex="0"></div><span class="fix"></span>`;
+    $("rows").appendChild(row);
+  });
+  $("bank").innerHTML = "";
+  shuffle(game.current.answers).forEach(text => $("bank").appendChild(makeChip(text)));
+  startTimer();
+}
+
+function makeChip(text){
+  const c = document.createElement("button");
+  c.className = "chip"; c.textContent = text; c.dataset.text = text; c.draggable = true;
+  c.addEventListener("dragstart", e => { game.dragged = c; c.classList.add("dragging"); e.dataTransfer.setData("text/plain", text); });
+  c.addEventListener("dragend", () => c.classList.remove("dragging"));
+  c.addEventListener("click", e => { e.stopPropagation(); onChipClick(c); });
+  return c;
+}
+
+/* ---------- placing chips (drag & drop + tap) ---------- */
+function placeChip(chip, slot){
+  if (game.checked) return;
+  const old = slot.querySelector(".chip");
+  if (old && old !== chip) $("bank").appendChild(old);   // swap out the previous answer
+  slot.appendChild(chip);
+  clearSelection();
+}
+function returnChip(chip){ if (!game.checked) { $("bank").appendChild(chip); clearSelection(); } }
+function clearSelection(){
+  if (game.selected) game.selected.classList.remove("selected");
+  game.selected = null;
+  document.querySelectorAll(".slot.target").forEach(s => s.classList.remove("target"));
+}
+function onChipClick(chip){
+  if (game.checked) return;
+  if (chip.parentElement.classList.contains("slot") && game.selected !== chip) return returnChip(chip); // tap a placed chip to remove it
+  if (game.selected === chip) return clearSelection();
+  clearSelection();
+  game.selected = chip; chip.classList.add("selected");
+  document.querySelectorAll(".slot").forEach(s => s.classList.add("target"));
+}
+
+function wireDropTargets(){
+  $("rows").addEventListener("dragover", e => { const s = e.target.closest(".slot"); if (s){ e.preventDefault(); s.classList.add("over"); } });
+  $("rows").addEventListener("dragleave", e => { const s = e.target.closest(".slot"); if (s) s.classList.remove("over"); });
+  $("rows").addEventListener("drop", e => {
+    const s = e.target.closest(".slot"); if (!s || !game.dragged) return;
+    e.preventDefault(); s.classList.remove("over"); placeChip(game.dragged, s);
+  });
+  $("rows").addEventListener("click", e => {
+    const s = e.target.closest(".slot");
+    if (s && game.selected && !s.querySelector(".chip")) placeChip(game.selected, s);
+    else if (s && game.selected) placeChip(game.selected, s);
+  });
+  $("rows").addEventListener("keydown", e => {
+    const s = e.target.closest(".slot");
+    if (s && e.key === "Enter" && game.selected) placeChip(game.selected, s);
+  });
+  $("bank").addEventListener("dragover", e => { e.preventDefault(); $("bank").classList.add("over"); });
+  $("bank").addEventListener("dragleave", () => $("bank").classList.remove("over"));
+  $("bank").addEventListener("drop", e => { e.preventDefault(); $("bank").classList.remove("over"); if (game.dragged) returnChip(game.dragged); });
+}
+
+/* ---------- timer ---------- */
+function startTimer(){
+  clearInterval(game.timer);
+  game.timeLeft = game.seconds;
+  $("timerFill").style.transition = "none";
+  $("timerFill").style.width = "100%";
+  void $("timerFill").offsetWidth;
+  $("timerFill").style.transition = "";
+  renderTime();
+  game.timer = setInterval(() => {
+    game.timeLeft--;
+    renderTime();
+    if (game.timeLeft <= 0) checkAnswers(true);
+  }, 1000);
+}
+function renderTime(){
+  $("timeNum").textContent = Math.max(0, game.timeLeft);
+  $("timerFill").style.width = (Math.max(0, game.timeLeft) / game.seconds * 100) + "%";
+  $("timerBar").classList.toggle("low", game.timeLeft / game.seconds <= 0.25);
+}
+
+/* ---------- checking ---------- */
+function checkAnswers(timedOut = false){
+  if (game.checked) return;
+  game.checked = true; clearInterval(game.timer); clearSelection();
+  $("game").classList.add("locked");
+
+  let right = 0;
+  document.querySelectorAll(".slot").forEach(slot => {
+    const i = +slot.dataset.i, chip = slot.querySelector(".chip");
+    const ok = chip && chip.dataset.text === game.current.answers[i];
+    slot.classList.add(ok ? "ok" : "bad");
+    if (ok) right++; else slot.parentElement.querySelector(".fix").textContent = "✗ " + game.current.answers[i];
+    if (ok) slot.parentElement.querySelector(".fix").textContent = "✓";
+  });
+
+  let gained = right * SETTINGS.pointsPerRow;
+  if (right === 6) gained += SETTINGS.perfectBonus + Math.round(game.timeLeft / game.seconds * 10);
+  game.score += gained; game.rows += right;
+  $("score").textContent = game.score;
+  $("feedback").textContent = (timedOut ? "¡Se acabó el tiempo! " : right === 6 ? "¡Perfecto! " : "") + `${right}/6 correctas · +${gained} puntos`;
+
+  $("checkBtn").hidden = true; $("nextBtn").hidden = false;
+  $("nextBtn").textContent = game.index + 1 < game.questions.length ? "Siguiente" : "Ver resultado";
+}
+
+function nextQuestion(){
+  game.index++;
+  game.index < game.questions.length ? showQuestion() : showResult();
+}
+
+function showResult(){
+  $("game").hidden = true; $("result").hidden = false;
+  $("finalScore").textContent = game.score;
+  $("finalDetail").textContent = `${game.rows} de ${game.questions.length * 6} líneas correctas`;
+}
+
+function backToSetup(){
+  clearInterval(game.timer);
+  $("game").hidden = true; $("result").hidden = true; $("setup").hidden = false;
+}
+
+/* =====================================================================
+   H. THEME (light / dark) — remembers the choice, defaults to the system setting
+   ===================================================================== */
+function applyTheme(theme){
+  document.documentElement.dataset.theme = theme;
+  $("themeBtn").textContent = theme === "dark" ? "☀ Modo claro" : "☾ Modo oscuro";
+  try { localStorage.setItem("theme", theme); } catch (e) {}
+}
+function initTheme(){
+  let saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  const system = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  applyTheme(saved || system);
+  $("themeBtn").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+}
+
+/* =====================================================================
+   I. START
+   ===================================================================== */
+$("startBtn").onclick = startGame;
+$("checkBtn").onclick = () => checkAnswers(false);
+$("nextBtn").onclick = nextQuestion;
+$("quitBtn").onclick = backToSetup;
+$("againBtn").onclick = backToSetup;
+$("allTenses").onclick = () => setAllTenses(true);
+$("noTenses").onclick = () => setAllTenses(false);
+initTheme();
+buildSetup();
+wireDropTargets();
+</script>
+</body>
+</html>
