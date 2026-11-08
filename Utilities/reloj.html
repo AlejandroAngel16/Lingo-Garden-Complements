@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reloj en Ruta — Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Warm Rustic palette: 585123 · EEC170 · F2A65A · F58549 · 772F1A */
+  :root{
+    --bg:#2B140C; --surface:#3A1B10; --input:#2F160D; --text:#FCEFD2; --muted:#D8BE8E;
+    --line:#5A2D1B; --brown:#F2A65A; --on-brown:#2B140C; --peach:#EEC170; --on-peach:#2B140C;
+    --ring:#F58549; --low:#EEC170; --glow:rgba(245,133,73,.6);
+    --sans:'Rubik',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    color-scheme:dark;
+    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:light){
+    :root:not([data-theme="dark"]){
+      --bg:#FCF3E0; --surface:#FFF9EC; --input:#FFFDF6; --text:#772F1A; --muted:#585123;
+      --line:#EBD3A6; --brown:#772F1A; --on-brown:#FFF4DC; --peach:#F2A65A; --on-peach:#3A1B10;
+      --ring:#F58549; --low:#772F1A; --glow:rgba(245,133,73,.55); color-scheme:light;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#FCF3E0; --surface:#FFF9EC; --input:#FFFDF6; --text:#772F1A; --muted:#585123;
+    --line:#EBD3A6; --brown:#772F1A; --on-brown:#FFF4DC; --peach:#F2A65A; --on-peach:#3A1B10;
+    --ring:#F58549; --low:#772F1A; --glow:rgba(245,133,73,.55); color-scheme:light;
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5;
+    display:flex;align-items:center;justify-content:center;padding:14px;
+  }
+  button{font-family:var(--sans);cursor:pointer;}
+  button:focus-visible,input:focus-visible{outline:3px solid var(--peach);outline-offset:2px;}
+
+  .panel{
+    position:relative;width:100%;max-width:380px;text-align:center;
+    background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;
+    box-shadow:0 12px 44px -14px var(--glow);
+  }
+  .panel.done{animation:pulse 1s ease-in-out infinite;}
+  @keyframes pulse{50%{box-shadow:0 0 0 2px var(--peach),0 0 48px 4px var(--glow);}}
+
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);}
+  h1{font-size:28px;font-weight:700;margin:4px 0 16px;line-height:1.15;letter-spacing:-.01em;}
+  h1 em{font-style:normal;color:var(--ring);text-shadow:0 0 16px var(--glow);}
+
+  .dial{position:relative;width:204px;height:204px;margin:0 auto 18px;}
+  .dial svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible;}
+  .dial circle{fill:none;stroke-width:9;}
+  .dial .bg{stroke:var(--line);}
+  .dial .fg{stroke:var(--ring);stroke-linecap:round;transition:stroke-dashoffset .25s linear,stroke .3s;
+    filter:drop-shadow(0 0 6px var(--glow));}
+  .dial.run .fg{filter:drop-shadow(0 0 10px var(--glow)) drop-shadow(0 0 3px var(--ring));}
+  .dial .fg.low{stroke:var(--low);}
+  .time{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:46px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em;transition:text-shadow .3s;}
+  .dial.run .time{text-shadow:0 0 22px var(--glow);}
+  .done .time{color:var(--ring);text-shadow:0 0 26px var(--glow);animation:blink .7s steps(2) infinite;}
+  @keyframes blink{50%{opacity:.3;}}
+
+  .label{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;}
+  .presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+  .chip{
+    font-size:14px;font-weight:600;padding:10px 6px;border-radius:12px;color:var(--text);
+    background:var(--input);border:2px solid var(--line);transition:border-color .15s,box-shadow .2s,transform .15s;
+  }
+  .chip:hover{border-color:var(--peach);box-shadow:0 0 14px -2px var(--glow);}
+  .chip.active{
+    border-color:var(--peach);color:var(--on-peach);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--peach) 78%,#fff),var(--peach));
+    box-shadow:0 0 18px -2px var(--glow),inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .custom{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:18px;font-size:13px;color:var(--muted);}
+  .custom input{
+    width:60px;padding:8px;text-align:center;font:600 15px var(--sans);color:var(--text);
+    background:var(--input);border:2px solid var(--line);border-radius:10px;
+  }
+  .custom input:focus{border-color:var(--peach);box-shadow:0 0 14px -2px var(--glow);}
+
+  .row{display:flex;gap:10px;align-items:center;}
+  .btn{
+    position:relative;overflow:hidden;border:0;border-radius:12px;font:700 17px var(--sans);padding:13px 22px;flex:1;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--brown) 80%,#fff),var(--brown));color:var(--on-brown);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 14px -2px var(--glow);
+    transition:transform .15s,box-shadow .2s,filter .2s;
+  }
+  .btn::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);pointer-events:none;}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.08);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 22px 0 var(--glow);}
+  .btn:hover::after{animation:shine .8s ease;}
+  .btn:active{transform:translateY(1px);}
+  @keyframes shine{to{left:130%;}}
+  .ghost{
+    font-size:13px;font-weight:600;padding:10px 14px;border-radius:12px;background:transparent;color:var(--text);
+    border:2px solid var(--line);transition:border-color .15s,box-shadow .2s;
+  }
+  .ghost:hover{border-color:var(--peach);box-shadow:0 0 14px -2px var(--glow);}
+  .theme{position:absolute;top:14px;right:14px;padding:7px 9px;font-size:14px;line-height:1;}
+  .credit{margin:18px 0 0;font-size:12px;font-weight:500;letter-spacing:.04em;color:var(--muted);}
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important;}
+    .btn::after{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="panel" id="panel">
+  <button class="ghost theme" id="theme" aria-label="Toggle light/dark mode" title="Light / dark"></button>
+  <div class="eyebrow">Timer</div>
+  <h1>Reloj <em>Temporizador</em></h1>
+
+  <div class="dial" id="dial">
+    <svg viewBox="0 0 64 64">
+      <circle class="bg" cx="32" cy="32" r="27"/>
+      <circle class="fg" id="ring" cx="32" cy="32" r="27"/>
+    </svg>
+    <div class="time" id="time" role="timer" aria-live="off">05:00</div>
+  </div>
+
+  <p class="label">Presets</p>
+  <div class="presets" id="presets"></div>
+
+  <div class="custom">
+    <span>Custom</span>
+    <input id="min" type="number" min="0" max="999" value="5" aria-label="Minutes">
+    <span>min</span>
+    <input id="sec" type="number" min="0" max="59" value="0" aria-label="Seconds">
+    <span>s</span>
+  </div>
+
+  <div class="row">
+    <button class="btn" id="go">Start</button>
+    <button class="ghost" id="reset">Reset</button>
+    <button class="ghost" id="mute" title="Sound on/off" aria-label="Sound on/off">🔔</button>
+  </div>
+  <p class="credit">Diseñado por Luis Alejandro Cuevas</p>
+</div>
+
+<script>
+/* EDIT ME — presets in seconds */
+const PRESETS = [
+  { label:"30s", s:30 }, { label:"1 min", s:60 }, { label:"3 min", s:180 },
+  { label:"5 min", s:300 }, { label:"10 min", s:600 }, { label:"25 min", s:1500 },
+];
+
+const $ = id => document.getElementById(id);
+const C = 2 * Math.PI * 27;
+const ring = $('ring'); ring.style.strokeDasharray = C;
+
+let total = 300, remaining = 300, endAt = 0, tick = null, running = false, muted = false;
+let audioCtx = null, alarmTimer = null;
+
+function fmt(s){
+  s = Math.max(0, Math.ceil(s));
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), r = s%60;
+  const p = n => String(n).padStart(2,'0');
+  return h ? `${h}:${p(m)}:${p(r)}` : `${p(m)}:${p(r)}`;
+}
+
+function render(){
+  $('time').textContent = fmt(remaining);
+  const frac = total ? Math.max(0, remaining)/total : 0;
+  ring.style.strokeDashoffset = C * (1 - frac);
+  ring.classList.toggle('low', frac <= 0.2 && running);
+  $('dial').classList.toggle('run', running);
+  $('go').textContent = running ? 'Pause' : (remaining < total && remaining > 0 ? 'Resume' : 'Start');
+}
+
+function setTime(s, chipEl){
+  stopAlarm(); pause();
+  total = remaining = Math.max(1, s);
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c === chipEl));
+  $('min').value = Math.floor(total/60); $('sec').value = total % 60;
+  render();
+}
+
+/* ---------- sound: WebAudio, no files needed ---------- */
+function ensureAudio(){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function beep(freq, t0, dur){
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function ringOnce(){
+  if(muted || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  [0, 0.28, 0.56].forEach(d => beep(988, t + d, 0.18));
+}
+function startAlarm(){
+  $('panel').classList.add('done');
+  ensureAudio(); ringOnce();
+  let n = 1;
+  alarmTimer = setInterval(() => { ringOnce(); if(++n >= 5) clearInterval(alarmTimer); }, 1500);
+}
+function stopAlarm(){
+  clearInterval(alarmTimer); alarmTimer = null;
+  $('panel').classList.remove('done');
+}
+
+/* ---------- timer ---------- */
+function start(){
+  ensureAudio(); stopAlarm();
+  if(remaining <= 0) remaining = total;
+  endAt = Date.now() + remaining * 1000;
+  running = true;
+  tick = setInterval(() => {
+    remaining = (endAt - Date.now()) / 1000;
+    if(remaining <= 0){ remaining = 0; pause(); startAlarm(); }
+    render();
+  }, 200);
+  render();
+}
+function pause(){ clearInterval(tick); running = false; render(); }
+
+$('go').onclick = () => running ? pause() : start();
+$('reset').onclick = () => { stopAlarm(); pause(); remaining = total; render(); };
+$('mute').onclick = () => {
+  muted = !muted; $('mute').textContent = muted ? '🔕' : '🔔';
+  if(!muted){ ensureAudio(); ringOnce(); }
+};
+function fromInputs(){
+  const m = parseInt($('min').value) || 0, s = parseInt($('sec').value) || 0;
+  setTime(m*60 + s, null);
+}
+$('min').onchange = $('sec').onchange = fromInputs;
+
+/* ---------- light / dark ---------- */
+const root = document.documentElement;
+function isDark(){
+  return root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function paintTheme(){ $('theme').textContent = isDark() ? '☀️' : '🌙'; }
+try{ const t = localStorage.getItem('timer-theme'); if(t) root.dataset.theme = t; }catch(e){}
+$('theme').onclick = () => {
+  const t = isDark() ? 'light' : 'dark';
+  root.dataset.theme = t;
+  try{ localStorage.setItem('timer-theme', t); }catch(e){}
+  paintTheme();
+};
+paintTheme();
+
+PRESETS.forEach(p => {
+  const b = document.createElement('button');
+  b.className = 'chip'; b.textContent = p.label;
+  b.onclick = () => setTime(p.s, b);
+  $('presets').appendChild(b);
+  if(p.s === 300) b.classList.add('active');
+});
+render();
+</script>
+</body>
+</html>
